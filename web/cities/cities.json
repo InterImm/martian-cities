@@ -2,13 +2,15 @@
   "cities": [
     {
       "id": "isidis-procyon",
-      "name": "Isidis Procyon",
-      "region": "Isidis Planitia",
-      "region_cn": "伊希迪斯平原",
-      "lat": 12.9,
-      "lon": 87.0,
-      "intro": "The 3D city is the InterImm martian-cities SketchUp model. Fly around it and walk its terraces under the real Martian sun.",
-      "intro_cn": "三维城市来自星际移民中心的 martian-cities SketchUp 模型。你可以环绕飞行，在真实的火星阳光下漫步它的梯田。",
+      "name": "Procyon City",
+      "name_cn": "南河城",
+      "region": "Isidis Plain",
+      "region_cn": "伊希地平原",
+      "lat": 16.181,
+      "lon": 84.624,
+      "intro": "Procyon City (南河城) is Isidis City No. 1, the first city on Mars. It grew from the first surface outpost, founded in April 2070, into a city the size of a mid-sized Earth city by the early 22nd century, and was named by public vote on 17 February 2123 after a star of the Winter Triangle. Its main role today is services, with the giant InterImm building at its centre. Fly around it, walk its terraces under the real Martian sun, and watch its power and propellant plants at work.",
+      "intro_cn": "南河城（Procyon City）是伊希地一号城，火星上的第一座城市。它从 2070 年 4 月建立的首个火星表面前哨站发展而来，到 22 世纪初已有地球上一座中等城市的规模；2123 年 2 月 17 日经全民公决，以冬季大三角中的南河三命名。如今它以服务业为主，城市中心是星际移民中心的巨型建筑。你可以环绕飞行，在真实的火星阳光下漫步它的梯田，并查看它的能源站和推进剂工厂的运行情况。",
+      "facilities": { "city": "Procyon City" },
       "model": { "file": "assets/isidis-city-procyon.stl", "format": "stl", "upAxis": "z", "scale": 1, "groundLevel": 0 },
       "terrain": { "flatRadius": 2300, "blendRadius": 3400 },
       "camera": { "orbit": [0, 1500, 3200], "target": [0, 60, 0], "walkStart": [0, 950] }

@@ -4,9 +4,9 @@
 
 .explorer{position:relative;height:max(34rem,calc(100dvh - 4rem));overflow:hidden;background:#d9a07a}
 #view{position:absolute;inset:0;width:100%;height:100%;display:block}
-#hud,#dock,#walk-help{z-index:2}
+#hud,#dock,#facilities,#walk-help{z-index:2}
 kbd{display:inline-block;min-width:1.6em;padding:0 .4em;margin:0 .1em;text-align:center;background:var(--bg-alt);border:1px solid var(--border);border-bottom-width:2px;border-radius:5px;font:.8em ui-monospace,monospace}
-.glass,#dock,#walk-help,.cityhud,.modes{background:var(--glass);-webkit-backdrop-filter:blur(12px) saturate(1.3);backdrop-filter:blur(12px) saturate(1.3);border:1px solid var(--border)}
+.glass,#dock,#facilities,#walk-help,.cityhud,.modes{background:var(--glass);-webkit-backdrop-filter:blur(12px) saturate(1.3);backdrop-filter:blur(12px) saturate(1.3);border:1px solid var(--border)}
 
 /* top bar inside the viewport */
 #hud{position:absolute;top:.75rem;left:.75rem;right:.75rem;display:flex;justify-content:space-between;align-items:center;gap:.75rem;pointer-events:none}
@@ -27,6 +27,23 @@ label output{float:right;color:var(--link);font-variant-numeric:tabular-nums;let
 input[type=range]{width:100%;accent-color:var(--accent);margin:.2rem 0 0}
 .note{color:var(--muted);font-size:.8rem;line-height:1.5;margin:.4rem 0 0}
 
+
+/* open facilities */
+#facilities{position:absolute;right:.75rem;top:3.9rem;bottom:.75rem;width:21rem;max-width:calc(100% - 1.5rem);overflow:auto;padding:1rem;border-radius:var(--radius)}
+#facilities h2{margin:0 0 .25rem;font-size:1.25rem}
+.fac{margin-top:.7rem;padding:.7rem .8rem;border-radius:.75rem;background:var(--surface);border:1px solid var(--border)}
+.fac header{display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem}
+.fac h3{margin:0;font-size:1rem;line-height:1.3}
+.chip{flex:none;font-size:.7rem;font-weight:700;padding:.1rem .5rem;border-radius:999px;border:1px solid currentColor}
+.st-operating{color:#1f9d6b}.st-reduced{color:#c28400}.st-maintenance{color:#3d7bff}.st-offline{color:#d64545}
+@media (prefers-color-scheme:dark){.st-operating{color:#4fd59d}.st-reduced{color:#f2b84b}.st-maintenance{color:#7aa7ff}.st-offline{color:#ff7a7a}}
+.kpi{display:grid;grid-template-columns:1fr auto;column-gap:.5rem;padding:.35rem 0;border-top:1px solid var(--border)}
+.kpi:first-child{border-top:0}
+.kk{color:var(--muted);font-size:.8rem}
+.kk small{margin-left:.35rem;font-size:.7rem;opacity:.8}
+.kv{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.kv small{font-weight:500;color:var(--muted)}
+.fl{display:inline-block;margin-top:.4rem;font-size:.85rem;color:var(--link);font-weight:600}
 
 /* walk hint */
 #walk-help{position:absolute;left:50%;top:4rem;transform:translateX(-50%);margin:0;padding:.4rem .9rem;border-radius:999px;font-size:.85rem;max-width:calc(100% - 1.5rem);text-align:center}
@@ -60,7 +77,9 @@ canvas#view{touch-action:none;-webkit-tap-highlight-color:transparent}
 
   /* the sun controls become a bottom sheet opened from the tab bar */
   #dock{display:none;left:.5rem;right:.5rem;width:auto;max-width:none;top:auto;bottom:3.6rem;height:auto;max-height:40%;border-radius:1rem;overflow:auto;z-index:3}
-  .explorer.show-dock #dock{display:block}
+  #facilities{display:none;left:.5rem;right:.5rem;width:auto;max-width:none;top:auto;bottom:3.6rem;height:auto;max-height:46%;border-radius:1rem;overflow:auto;padding:.8rem;z-index:3}
+  #facilities h2{font-size:1rem}
+  .explorer.show-dock #dock,.explorer.show-facilities #facilities{display:block}
   #dock{padding:.7rem 1rem .6rem}
   input[type=range]{height:2.25rem}
   input[type=range]::-webkit-slider-thumb{width:1.5rem;height:1.5rem}

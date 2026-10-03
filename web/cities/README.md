@@ -14,13 +14,15 @@ The site reads `cities/cities.json`. To add a city:
   "lon": 77.5,
   "intro": "One or two sentences shown on the welcome card.",
   "model": { "file": "assets/my-city.glb", "format": "glb", "upAxis": "y", "scale": 1, "groundLevel": 0 },
+  "facilities": { "city": "Procyon City" },
   "terrain": { "flatRadius": 1500, "blendRadius": 2500 },
   "camera": { "orbit": [0, 1000, 2200], "target": [0, 40, 0], "walkStart": [0, 600] }
 }
 ```
 
 - `lat` is the latitude in degrees north and `lon` the longitude in degrees east. Together they set the sun path and the live local solar time.
-- `region_cn` and `intro_cn` are the Chinese region name and welcome text, shown with `?lang=cn`. Without them the English text is used.
+- `name_cn`, `region_cn` and `intro_cn` are the Chinese city name, region name and welcome text, shown with `?lang=cn`. Without them the English text is used.
+- `facilities.city` picks the plants shown in the Facilities panel: every facility in the mars-open-facilities index whose `city` matches. Leave it out to hide the panel.
 - `model.scale` converts model units to metres (use `0.0254` for inches, `0.001` for mm).
 - `model.upAxis` is `z` for SketchUp STL exports, usually `y` for glTF.
 - `model.groundLevel` is the height, in the model's own units, of the surface people walk on. It is placed at terrain level.

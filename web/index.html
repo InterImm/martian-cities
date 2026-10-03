@@ -14,43 +14,52 @@
 <body>
 <canvas id="view"></canvas>
 
+<!-- Intro: same text as before, now a welcome card -->
+<div id="intro" role="dialog" aria-labelledby="intro-title">
+  <div class="card">
+    <p class="eyebrow">InterImm · Isidis Planitia, Mars</p>
+    <h1 id="intro-title">Isidis Procyon</h1>
+    <p class="lede">A Martian city, explorable.</p>
+    <p>The 3D city is the InterImm <a href="https://github.com/InterImm/martian-cities">martian-cities</a> SketchUp model. Fly around it, walk its terraces under the Martian sun, then set a population and see what it takes to keep everyone alive.</p>
+    <ul>
+      <li><b>Orbit</b> to look down on the whole settlement.</li>
+      <li><b>Walk</b> at street level with Mars gravity (3.71 m/s²).</li>
+      <li><b>Budget</b> shows power, oxygen, water and farmland for any population.</li>
+    </ul>
+    <p class="fine">Terrain here is <b>illustrative</b>, not real Isidis elevation data yet. Model units are assumed to be metres. Budget figures are rough estimates, not mission data.</p>
+    <button id="enter" disabled>Loading city model…</button>
+  </div>
+</div>
+
 <header id="hud">
-  <h1>Isidis Procyon <small>a Martian city, explorable</small></h1>
-  <div class="modes">
+  <div class="brand"><span class="dot"></span><b>Isidis Procyon</b><small>a Martian city, explorable</small></div>
+  <nav class="modes" aria-label="View mode">
     <button id="btn-orbit" class="on">Orbit</button>
     <button id="btn-walk">Walk</button>
-  </div>
+    <button id="btn-info" class="ghost" aria-label="About">?</button>
+  </nav>
 </header>
 
-<div id="loading">Loading city model…</div>
+<p id="walk-help" hidden>Click the scene, then <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Space</kbd> to jump, <kbd>Shift</kbd> to run, <kbd>Esc</kbd> to release.</p>
 
-<aside id="panel">
-  <section>
-    <h2>Time &amp; season</h2>
-    <label>Mars hour <output id="o-hour"></output>
-      <input id="hour" type="range" min="0" max="24.66" step="0.05" value="12"></label>
-    <label>Season (Ls) <output id="o-ls"></output>
-      <input id="ls" type="range" min="0" max="359" step="1" value="90"></label>
-    <p class="note" id="sun-readout"></p>
-  </section>
+<section id="dock" aria-label="Sun controls">
+  <label>Mars hour <output id="o-hour"></output>
+    <input id="hour" type="range" min="0" max="24.66" step="0.05" value="12"></label>
+  <label>Season (Ls) <output id="o-ls"></output>
+    <input id="ls" type="range" min="0" max="359" step="1" value="90"></label>
+  <p class="note" id="sun-readout"></p>
+</section>
 
-  <section>
-    <h2>Settlement budget</h2>
-    <label>Population <output id="o-pop"></output>
-      <input id="pop" type="range" min="10" max="50000" step="10" value="1000"></label>
-    <table id="budget"></table>
-    <p class="note">Rough engineering estimates with the assumptions below, not mission data. Change them to test your own case.</p>
-    <details>
-      <summary>Assumptions</summary>
-      <div id="assume"></div>
-    </details>
-  </section>
-
-  <section class="note">
-    <h2>About</h2>
-    <p>The 3D city is the InterImm <a href="https://github.com/InterImm/martian-cities">martian-cities</a> SketchUp model. Terrain here is <b>illustrative</b>, not real Isidis elevation data yet. Model units are assumed to be metres.</p>
-    <p id="walk-help" hidden>Walk: click the scene, then W A S D to move, Space to jump (Mars gravity 3.71 m/s²), Shift to run, Esc to release.</p>
-  </section>
+<aside id="panel" aria-label="Settlement budget">
+  <h2>Settlement budget</h2>
+  <label class="pop">Population <output id="o-pop"></output>
+    <input id="pop" type="range" min="10" max="50000" step="10" value="1000"></label>
+  <div id="budget" class="tiles"></div>
+  <p class="note">Rough engineering estimates with the assumptions below, not mission data. Change them to test your own case.</p>
+  <details>
+    <summary>Assumptions</summary>
+    <div id="assume"></div>
+  </details>
 </aside>
 
 <script type="module" src="js/main.js"></script>

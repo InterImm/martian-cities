@@ -239,6 +239,7 @@ $('tabs').addEventListener('click', e => {
   closeSheets();
   if (!was) { stage0.classList.add('show-' + b.dataset.tab); b.setAttribute('aria-pressed', 'true'); }
 });
+canvas.addEventListener('pointerdown', () => { if (!touchWalk) closeSheets(); });
 setTimeout(() => $('orbit-hint').classList.add('gone'), 8000);
 $('enter').addEventListener('click', () => $('orbit-hint').classList.remove('gone'));
 

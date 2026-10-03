@@ -7,10 +7,10 @@ export const MARS = {
 };
 
 // Sun elevation/azimuth (radians; azimuth clockwise from north) for local mean solar hour and Ls (degrees).
-export function sunPosition(hour, lsDeg) {
+export function sunPosition(hour, lsDeg, latDeg = 12.9) {
   const dec = Math.asin(Math.sin(MARS.obliquity) * Math.sin(lsDeg * Math.PI / 180));
   const h = (hour / MARS.solHours - 0.5) * 2 * Math.PI;
-  const phi = MARS.isidisLat;
+  const phi = latDeg * Math.PI / 180;
   const sinEl = Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(h);
   const el = Math.asin(sinEl);
   const cosEl = Math.cos(el) || 1e-9;

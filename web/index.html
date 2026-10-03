@@ -2,65 +2,175 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>document.documentElement.classList.add("js")</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Isidis Procyon – Martian city explorer</title>
-<meta name="description" content="Explore the InterImm Isidis Procyon Martian city in 3D and see what it takes to keep it alive. Runs entirely in your browser.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%2714%27 fill=%27%23e07b39%27/%3E%3C/svg%3E">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f5f7fb" media="(prefers-color-scheme: light)">
+<title>Martian city explorer | InterImm</title>
+<meta name="description" content="Explore the InterImm Martian cities in 3D and see what it takes to keep them alive. Runs entirely in your browser.">
+<meta name="author" content="InterImm">
+<link rel="icon" href="assets/ico/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/png" href="assets/ico/favicon-192x192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="assets/ico/apple-touch-icon.png">
+<link rel="stylesheet" href="css/site.css">
 <link rel="stylesheet" href="css/style.css">
 <script type="importmap">
 { "imports": { "three": "./vendor/three.module.min.js" } }
 </script>
+<script src="js/nav.js" defer></script>
 </head>
 <body>
-<canvas id="view"></canvas>
+<a class="skip-link" href="#main">Skip to content</a>
 
-<!-- Intro: same text as before, now a welcome card -->
-<div id="intro" role="dialog" aria-labelledby="intro-title">
-  <div class="card">
-    <p class="eyebrow">InterImm · Isidis Planitia, Mars</p>
-    <h1 id="intro-title">Isidis Procyon</h1>
-    <p class="lede">A Martian city, explorable.</p>
-    <p>The 3D city is the InterImm <a href="https://github.com/InterImm/martian-cities">martian-cities</a> SketchUp model. Fly around it, walk its terraces under the Martian sun, then set a population and see what it takes to keep everyone alive.</p>
-    <ul>
-      <li><b>Orbit</b> to look down on the whole settlement.</li>
-      <li><b>Walk</b> at street level with Mars gravity (3.71 m/s²).</li>
-      <li><b>Budget</b> shows power, oxygen, water and farmland for any population.</li>
-    </ul>
-    <p class="fine">Terrain here is <b>illustrative</b>, not real Isidis elevation data yet. Model units are assumed to be metres. Budget figures are rough estimates, not mission data.</p>
-    <button id="enter" disabled>Loading city model…</button>
+<!-- Header: same menu as interimm.org (English) -->
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="https://interimm.org/en/">
+      <img class="brand-mark" src="assets/ico/favicon-96x96.png" alt="" width="32" height="32">
+      <span class="brand-name">InterImm</span>
+    </a>
+
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+      <span class="sr-only">Menu</span>
+      <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="24" height="24"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+
+    <nav id="site-nav" class="site-nav" aria-label="Menu">
+      <ul class="nav-list">
+        <li class="nav-item">
+          <details class="dropdown">
+            <summary>Archives</summary>
+            <ul class="dropdown-menu">
+              <li><a href="https://interimm.org/en/archives/">All archives</a></li>
+              <li><a href="https://book.interimm.org/">The Book of Interplanetary Civilization</a></li>
+              <li><a href="https://exoplanets.interimm.org/">The Book of Exoplanets</a></li>
+              <li><a href="https://interimm.org/hub/">Space Yellow Page</a></li>
+            </ul>
+          </details>
+        </li>
+        <li class="nav-item"><a class="nav-link" href="https://planiversity.interimm.org/">Planetary University</a></li>
+        <li class="nav-item"><a class="nav-link" href="https://interimm.org/en/activities/">Activities</a></li>
+        <li class="nav-item"><a class="nav-link" href="https://interimm.org/mars-map/">Mars Map</a></li>
+        <li class="nav-item">
+          <details class="dropdown">
+            <summary>More</summary>
+            <ul class="dropdown-menu">
+              <li><a href="https://interimm.org/en/institutes/">Institutes</a></li>
+              <li><a href="https://timeline.interimm.org/">Timeline</a></li>
+              <li><a href="https://magazine.interimm.org/">Magazine</a></li>
+              <li><a href="https://interimm.org/interplanetary-logistics/">Logistics</a></li>
+            </ul>
+          </details>
+        </li>
+      </ul>
+
+      <ul class="nav-list nav-tools">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/interimm" rel="noopener">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.921.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+            <span>GitHub</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link lang-link" href="https://interimm.org/" hreflang="zh-CN" lang="zh-CN"><span class="sr-only">Language: </span>中文</a>
+        </li>
+      </ul>
+    </nav>
   </div>
-</div>
-
-<header id="hud">
-  <div class="brand"><span class="dot"></span><b>Isidis Procyon</b><small>a Martian city, explorable</small></div>
-  <nav class="modes" aria-label="View mode">
-    <button id="btn-orbit" class="on">Orbit</button>
-    <button id="btn-walk">Walk</button>
-    <button id="btn-info" class="ghost" aria-label="About">?</button>
-  </nav>
 </header>
 
-<p id="walk-help" hidden>Click the scene, then <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Space</kbd> to jump, <kbd>Shift</kbd> to run, <kbd>Esc</kbd> to release.</p>
+<main id="main">
+<div class="explorer" id="explorer">
+  <canvas id="view"></canvas>
 
-<section id="dock" aria-label="Sun controls">
-  <label>Mars hour <output id="o-hour"></output>
-    <input id="hour" type="range" min="0" max="24.66" step="0.05" value="12"></label>
-  <label>Season (Ls) <output id="o-ls"></output>
-    <input id="ls" type="range" min="0" max="359" step="1" value="90"></label>
-  <p class="note" id="sun-readout"></p>
-</section>
+  <!-- Intro: welcome card, filled from cities/cities.json -->
+  <div id="intro" role="dialog" aria-labelledby="intro-title">
+    <div class="intro-card">
+      <p class="eyebrow" id="intro-region">InterImm · Mars</p>
+      <h1 id="intro-title">Isidis Procyon</h1>
+      <p class="lede">A Martian city, explorable.</p>
+      <p id="intro-text">The 3D city is the InterImm martian-cities SketchUp model. Fly around it, walk its terraces under the Martian sun, then set a population and see what it takes to keep everyone alive.</p>
+      <ul>
+        <li><b>Orbit</b> to look down on the whole settlement.</li>
+        <li><b>Walk</b> at street level with Mars gravity (3.71 m/s²).</li>
+        <li><b>Budget</b> shows power, oxygen, water and farmland for any population.</li>
+      </ul>
+      <p class="fine">Models come from <a href="https://github.com/InterImm/martian-cities">InterImm/martian-cities</a>. Terrain here is <b>illustrative</b>, not real elevation data yet. Model units are assumed to be metres unless a city says otherwise. Budget figures are rough estimates, not mission data.</p>
+      <button id="enter" class="btn btn-primary btn-lg" disabled>Loading city model…</button>
+    </div>
+  </div>
 
-<aside id="panel" aria-label="Settlement budget">
-  <h2>Settlement budget</h2>
-  <label class="pop">Population <output id="o-pop"></output>
-    <input id="pop" type="range" min="10" max="50000" step="10" value="1000"></label>
-  <div id="budget" class="tiles"></div>
-  <p class="note">Rough engineering estimates with the assumptions below, not mission data. Change them to test your own case.</p>
-  <details>
-    <summary>Assumptions</summary>
-    <div id="assume"></div>
-  </details>
-</aside>
+  <div id="hud">
+    <div class="cityhud"><b id="brand-name">Isidis Procyon</b><select id="city" aria-label="City" hidden></select><small>a Martian city, explorable</small></div>
+    <nav class="modes" aria-label="View mode">
+      <button id="btn-orbit" class="btn on">Orbit</button>
+      <button id="btn-walk" class="btn">Walk</button>
+      <button id="btn-info" class="btn" aria-label="About this city">?</button>
+    </nav>
+  </div>
+
+  <p id="walk-help" hidden>Click the scene, then <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Space</kbd> to jump, <kbd>Shift</kbd> to run, <kbd>Esc</kbd> to release.</p>
+
+  <section id="dock" aria-label="Sun controls">
+    <label>Mars hour <output id="o-hour"></output>
+      <input id="hour" type="range" min="0" max="24.66" step="0.05" value="12"></label>
+    <label>Season (Ls) <output id="o-ls"></output>
+      <input id="ls" type="range" min="0" max="359" step="1" value="90"></label>
+    <p class="note" id="sun-readout"></p>
+  </section>
+
+  <aside id="panel" aria-label="Settlement budget">
+    <h2>Settlement budget</h2>
+    <label class="pop">Population <output id="o-pop"></output>
+      <input id="pop" type="range" min="10" max="50000" step="10" value="1000"></label>
+    <div id="budget" class="tiles"></div>
+    <p class="note">Rough engineering estimates with the assumptions below, not mission data. Change them to test your own case.</p>
+    <details>
+      <summary>Assumptions</summary>
+      <div id="assume"></div>
+    </details>
+  </aside>
+</div>
+</main>
+
+<!-- Footer: same as interimm.org (English) -->
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <section class="footer-col">
+        <h2>About</h2>
+        <p>Interplanetary Immigration Center is the key member of Interplanetary Immigration Agency. We research and develop space related products and serve the society on Mars.</p>
+        <ul>
+          <li><a href="https://github.com/InterImm/service/releases">PressKit</a></li>
+          <li><a href="https://interimm.org/en/about/">About</a></li>
+        </ul>
+      </section>
+      <section class="footer-col">
+        <h2>Social Media</h2>
+        <ul>
+          <li><a href="https://github.com/InterImm">GitHub</a></li>
+          <li><a href="mailto:admin@interimm.org">admin@interimm.org</a></li>
+          <li><a href="https://zhuanlan.zhihu.com/interimm">Zhihu Blog</a></li>
+          <li><a href="https://www.weibo.com/iiaofficial">Weibo</a></li>
+          <li><a href="https://www.guokr.com/group/i/1703723671/">Guokr</a></li>
+          <li><a href="https://www.zhihu.com/people/interimm">Zhihu Profile</a></li>
+          <li><a href="https://discord.gg/pyfyR2X">InterImm@Discord</a></li>
+          <li><a href="https://space.bilibili.com/6296332">Bilibili @ 星际移民中心</a></li>
+        </ul>
+      </section>
+      <section class="footer-col">
+        <h2>Network</h2>
+        <ul>
+          <li><a href="http://exponentialdeepspace.org">Exponential Deep Space</a></li>
+          <li><a href="https://planiversity.interimm.org">Planetary University of Mars</a></li>
+          <li><a href="https://starspress.org/">STARS Press</a></li>
+        </ul>
+      </section>
+    </div>
+    <p class="footer-legal">© <span id="year">2026</span> InterImm</p>
+  </div>
+</footer>
 
 <script type="module" src="js/main.js"></script>
 </body>

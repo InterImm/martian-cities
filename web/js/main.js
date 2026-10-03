@@ -3,7 +3,8 @@ import { STLLoader } from '../vendor/STLLoader.js';
 import { GLTFLoader } from '../vendor/GLTFLoader.js';
 import { OrbitControls } from '../vendor/OrbitControls.js';
 import { PointerLockControls } from '../vendor/PointerLockControls.js';
-import { sunPosition, budget, fmt, DEFAULTS } from './sim.js';
+import { sunPosition, budget, fmt, DEFAULTS, MARS } from './sim.js';
+import { marsState } from './marstime.js';
 
 const GROUND_Y = -0.4;            // flat zone sits just below the model's ground slabs
 const TERRAIN_SIZE = 16000;
@@ -246,7 +247,7 @@ async function showCity(id) {
     cityGroup = group; scene.add(group);
     camera.position.set(...cfg.camera.orbit); orbit.target.set(...cfg.camera.target); camera.lookAt(orbit.target);
     $('pop').value = cfg.population ?? 1000;
-    updateSun(); updateBudget();
+    live ? applyLive() : updateSun(); updateBudget();
     en.disabled = false; en.textContent = 'Enter the city';
   } catch (err) { if (token === loadToken) en.textContent = 'Could not load the city model: ' + err.message; }
 }
@@ -285,9 +286,26 @@ function updateSun() {
   placePhobos(hour);
   $('o-hour').textContent = hour.toFixed(1) + ' h';
   $('o-ls').textContent = 'Ls ' + ls + '°';
-  $('sun-readout').textContent = `Sun ${(el * 180 / Math.PI).toFixed(0)}° above the horizon at ${(cfg?.lat ?? 12.9).toFixed(1)}°N` + (el < 0 ? ' (night)' : '');
+  $('sun-readout').textContent = `Sun ${(el * 180 / Math.PI).toFixed(0)}° above the horizon at ${(cfg?.lat ?? 12.9).toFixed(1)}°N` + (el < 0 ? ' (night)' : '') + (liveInfo ? ` · local solar time ${hm(liveInfo.ltst)} · Ls ${liveInfo.ls.toFixed(1)}° · sol ${Math.floor(liveInfo.msd).toLocaleString()}` : '');
 }
-$('hour').addEventListener('input', updateSun); $('ls').addEventListener('input', updateSun);
+// Live mode: drive the sliders from the real clock at the city's longitude. Touching a slider switches it off.
+let live = true, liveInfo = null;
+const hm = h => { const t = Math.round(h * 60) % 1440; return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); };
+function applyLive() {
+  if (!live || !cfg) return;
+  const st = marsState(new Date(), cfg.lon ?? 0);
+  liveInfo = st;
+  $('hour').value = st.ltst / 24 * MARS.solHours; $('ls').value = st.ls.toFixed(1);
+  updateSun();
+}
+function setLive(on) {
+  live = on; $('live').classList.toggle('on', on); $('live').setAttribute('aria-pressed', on);
+  if (on) applyLive(); else { liveInfo = null; updateSun(); }
+}
+$('live').addEventListener('click', () => setLive(!live));
+const manual = () => { if (live) { live = false; $('live').classList.remove('on'); $('live').setAttribute('aria-pressed', 'false'); liveInfo = null; } updateSun(); };
+$('hour').addEventListener('input', manual); $('ls').addEventListener('input', manual);
+setInterval(applyLive, 5000);
 
 // ---- walk mode --------------------------------------------------------------
 let jumpQueued = false;

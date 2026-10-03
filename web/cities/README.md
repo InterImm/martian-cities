@@ -11,6 +11,7 @@ The site reads `cities/cities.json`. To add a city:
   "name": "Display name",
   "region": "Where on Mars",
   "lat": 18.4,
+  "lon": 77.5,
   "intro": "One or two sentences shown on the welcome card.",
   "model": { "file": "assets/my-city.glb", "format": "glb", "upAxis": "y", "scale": 1, "groundLevel": 0 },
   "terrain": { "flatRadius": 1500, "blendRadius": 2500 },
@@ -19,7 +20,7 @@ The site reads `cities/cities.json`. To add a city:
 }
 ```
 
-- `lat` is the latitude in degrees north. It sets the sun path.
+- `lat` is the latitude in degrees north and `lon` the longitude in degrees east. Together they set the sun path and the live local solar time.
 - `model.scale` converts model units to metres (use `0.0254` for inches, `0.001` for mm).
 - `model.upAxis` is `z` for SketchUp STL exports, usually `y` for glTF.
 - `model.groundLevel` is the height, in the model's own units, of the surface people walk on. It is placed at terrain level.

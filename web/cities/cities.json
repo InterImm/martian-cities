@@ -5,6 +5,7 @@
       "name": "Isidis Procyon",
       "region": "Isidis Planitia",
       "lat": 12.9,
+      "lon": 87.0,
       "intro": "The 3D city is the InterImm martian-cities SketchUp model. Fly around it, walk its terraces under the Martian sun, then set a population and see what it takes to keep everyone alive.",
       "model": { "file": "assets/isidis-city-procyon.stl", "format": "stl", "upAxis": "z", "scale": 1, "groundLevel": 0 },
       "terrain": { "flatRadius": 2300, "blendRadius": 3400 },

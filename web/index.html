@@ -5,26 +5,28 @@
 <script>document.documentElement.classList.add("js")</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark light">
-<meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#f5f7fb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#07090f" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
 <title>Martian city explorer | InterImm</title>
 <meta name="description" content="Explore the InterImm Martian cities in 3D and see what it takes to keep them alive. Runs entirely in your browser.">
 <meta name="author" content="InterImm">
 <link rel="icon" href="assets/ico/favicon.ico" sizes="32x32">
 <link rel="icon" type="image/png" href="assets/ico/favicon-192x192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="assets/ico/apple-touch-icon.png">
-<link rel="stylesheet" href="css/site.css?v=20261003e">
+<!-- Shared InterImm look (colours, fonts, header, footer), served by interimm.org. See
+     https://github.com/InterImm/interimm.github.io/blob/hugo/kit/README.md -->
+<link rel="stylesheet" href="https://interimm.org/kit/interimm.css">
 <link rel="stylesheet" href="css/style.css?v=20261003e">
 <script type="importmap">
 { "imports": { "three": "./vendor/three.module.min.js" } }
 </script>
-<script src="js/nav.js?v=20261003e" defer></script>
+<script src="https://interimm.org/kit/interimm.js" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
 
-<!-- Header: same menu as interimm.org (English) -->
-<header class="site-header">
+<!-- Header: replaced with the live interimm.org menu by the kit script; this markup is the fallback. -->
+<header class="site-header" data-interimm-header data-lang="en">
   <div class="wrap header-inner">
     <a class="brand" href="https://interimm.org/en/">
       <img class="brand-mark" src="assets/ico/favicon-96x96.png" alt="" width="32" height="32">
@@ -145,8 +147,8 @@
 </div>
 </main>
 
-<!-- Footer: same as interimm.org (English) -->
-<footer class="site-footer">
+<!-- Footer: replaced with the live interimm.org footer by the kit script; this markup is the fallback. -->
+<footer class="site-footer" data-interimm-footer>
   <div class="wrap">
     <div class="footer-grid">
       <section class="footer-col">

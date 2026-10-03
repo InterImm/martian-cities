@@ -5,6 +5,7 @@ A static, zero-backend site: the Isidis Procyon city model in 3D plus a settleme
 - `js/main.js`: three.js scene, orbit and walk modes, sun/season sliders
 - `js/sim.js`: sun position and the population budget (plain maths, no DOM)
 - `assets/isidis-city-procyon.stl`: copy of `city-plan/isidis-procyon/isidis-city-procyon.stl`
+- Header, footer, colours and fonts: the shared InterImm kit, linked from `https://interimm.org/kit/` (see [its notes](https://github.com/InterImm/interimm.github.io/blob/hugo/kit/README.md)); running locally needs internet for that
 - `vendor/`: three.js r170 and the STL loader and controls, so there is no CDN dependency
 
 Run locally: `cd web && python3 -m http.server`, then open http://localhost:8000.

@@ -1,4 +1,4 @@
-/* Explorer styles. Colours and header/footer come from site.css (copied from interimm.org). */
+/* Explorer styles. Colours, fonts, header and footer come from the shared InterImm kit (https://interimm.org/kit/interimm.css). */
 :root{--glass:color-mix(in srgb,var(--surface) 84%,transparent);--warn:#b26a00}
 @media (prefers-color-scheme:dark){:root{--warn:#ffcf70}}
 

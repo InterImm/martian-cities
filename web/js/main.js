@@ -406,7 +406,7 @@ $('city').addEventListener('change', e => { $('intro').classList.remove('gone');
 const stage = $('explorer');
 function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize); new ResizeObserver(resize).observe(stage); resize();
-$('year').textContent = new Date().getFullYear();
+{ const y = $('year'); if (y) y.textContent = new Date().getFullYear(); } // only in the fallback footer; the kit footer has its own year
 let last = performance.now();
 renderer.setAnimationLoop(now => {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;

@@ -7,10 +7,11 @@ const CN = {
   lede: '一座可以探索的火星城市。',
   li1: '<b>环绕</b>：从高处俯瞰整座城市。',
   li2: '<b>漫步</b>：以火星重力（3.71 m/s²）在街道上行走。',
-  fine: '模型来自 <a href="https://github.com/InterImm/martian-cities">InterImm/martian-cities</a>。这里的地形是<b>示意性</b>的，还不是真实高程数据。除非城市另有说明，模型单位按米处理。',
+  fine: '城市周围的地形是<b>示意性</b>的，还不是真实高程数据。设施读数是为 InterImm 故事模拟的，故事设定在 2219 年。',
   tagline: '一座可探索的火星城市',
   orbit: '环绕', walk: '漫步',
   live: '实时火星时间', hour: '火星时', season: '季节 (Ls)',
+  facTitle: '公开设施', facIntro: '这座城市各工厂的实时读数，为 InterImm 故事而模拟。', tabFac: '设施',
   hint: '拖动环顾 · 捏合缩放 · 双指移动', jump: '跳',
   tabSun: '太阳', tabAbout: '关于',
 };

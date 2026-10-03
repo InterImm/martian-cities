@@ -6,6 +6,7 @@ import { PointerLockControls } from '../vendor/PointerLockControls.js';
 import { sunPosition, MARS } from './sim.js';
 import { marsState } from './marstime.js';
 import { L, fixLangLinks } from './i18n.js';
+import { loadFacilities } from './facilities.js';
 
 const GROUND_Y = -0.4;            // flat zone sits just below the model's ground slabs
 const TERRAIN_SIZE = 16000;
@@ -231,10 +232,11 @@ async function showCity(id) {
   const token = ++loadToken;
   cfg = next; seed = seedFrom(cfg.id);
   const en = $('enter'); en.disabled = true; en.textContent = L('Loading city model…', '正在加载城市模型…');
-  $('brand-name').textContent = cfg.name; $('intro-title').textContent = cfg.name;
+  const nm = L(cfg.name, cfg.name_cn || cfg.name);
+  $('brand-name').textContent = nm; $('intro-title').textContent = nm;
   $('intro-region').textContent = L('InterImm · ' + cfg.region + ', Mars', 'InterImm · ' + (cfg.region_cn || cfg.region) + ' · 火星');
   $('intro-text').textContent = L(cfg.intro, cfg.intro_cn || cfg.intro);
-  document.title = cfg.name + ' | InterImm'; fixLangLinks();
+  document.title = nm + ' | InterImm'; fixLangLinks();
   if ($('city').value !== cfg.id) $('city').value = cfg.id;
   history.replaceState(null, '', '#city=' + cfg.id);
   if (mode === 'walk') setMode('orbit');
@@ -247,6 +249,7 @@ async function showCity(id) {
     if (token !== loadToken) return;          // another city was picked meanwhile
     cityGroup = group; scene.add(group);
     camera.position.set(...cfg.camera.orbit); orbit.target.set(...cfg.camera.target); camera.lookAt(orbit.target);
+    loadFacilities($('facilities'), cfg.facilities);
     live ? applyLive() : updateSun();
     en.disabled = false; en.textContent = L('Enter the city', '进入城市');
   } catch (err) { if (token === loadToken) en.textContent = L('Could not load the city model: ', '无法加载城市模型：') + err.message; }
@@ -308,6 +311,7 @@ $('live').addEventListener('click', () => setLive(!live));
 const manual = () => { if (live) { live = false; $('live').classList.remove('on'); $('live').setAttribute('aria-pressed', 'false'); liveInfo = null; } updateSun(); };
 $('hour').addEventListener('input', manual); $('ls').addEventListener('input', manual);
 setInterval(applyLive, 5000);
+setInterval(() => cfg && loadFacilities($('facilities'), cfg.facilities), 10 * 60 * 1000);
 
 // ---- walk mode --------------------------------------------------------------
 let jumpQueued = false;
@@ -347,7 +351,7 @@ $('btn-orbit').onclick = () => setMode('orbit'); $('btn-walk').onclick = () => s
 canvas.addEventListener('click', () => { if (mode === 'walk' && !walk.isLocked) walk.lock(); });
 
 // ---- touch controls and phone tabs ------------------------------------------
-function closeSheets() { stage0.classList.remove('show-dock'); document.querySelectorAll('#tabs [aria-pressed]').forEach(b => b.setAttribute('aria-pressed', 'false')); }
+function closeSheets() { stage0.classList.remove('show-dock', 'show-facilities'); document.querySelectorAll('#tabs [aria-pressed]').forEach(b => b.setAttribute('aria-pressed', 'false')); }
 $('tabs').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.tab === 'info') { closeSheets(); $('intro').classList.remove('gone'); return; }
@@ -422,7 +426,7 @@ window.__mars = { camera, scene, setMode, showCity, get city() { return cityGrou
     const res = await fetch(new URL('../cities/cities.json', import.meta.url));
     cities = (await res.json()).cities;
     const sel = $('city');
-    sel.innerHTML = cities.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    sel.innerHTML = cities.map(c => `<option value="${c.id}">${L(c.name, c.name_cn || c.name)}</option>`).join('');
     sel.hidden = cities.length < 2;
     const want = /city=([\w-]+)/.exec(location.hash)?.[1];
     await showCity(want);

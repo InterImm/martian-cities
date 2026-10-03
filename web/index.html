@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#07090f" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
 <title>Martian city explorer | InterImm</title>
-<meta name="description" content="Explore the InterImm Martian cities in 3D and see what it takes to keep them alive. Runs entirely in your browser.">
+<meta name="description" content="Explore the InterImm Martian cities in 3D under the real Martian sun. Runs entirely in your browser.">
 <meta name="author" content="InterImm">
 <link rel="icon" href="assets/ico/favicon.ico" sizes="32x32">
 <link rel="icon" type="image/png" href="assets/ico/favicon-192x192.png" sizes="192x192">
@@ -92,13 +92,12 @@
       <p class="eyebrow" id="intro-region">InterImm · Mars</p>
       <h1 id="intro-title">Isidis Procyon</h1>
       <p class="lede" data-i18n="lede">A Martian city, explorable.</p>
-      <p id="intro-text">The 3D city is the InterImm martian-cities SketchUp model. Fly around it, walk its terraces under the Martian sun, then set a population and see what it takes to keep everyone alive.</p>
+      <p id="intro-text">The 3D city is the InterImm martian-cities SketchUp model. Fly around it and walk its terraces under the real Martian sun.</p>
       <ul>
         <li data-i18n="li1"><b>Orbit</b> to look down on the whole settlement.</li>
         <li data-i18n="li2"><b>Walk</b> at street level with Mars gravity (3.71 m/s²).</li>
-        <li data-i18n="li3"><b>Budget</b> shows power, oxygen, water and farmland for any population.</li>
       </ul>
-      <p class="fine" data-i18n="fine">Models come from <a href="https://github.com/InterImm/martian-cities">InterImm/martian-cities</a>. Terrain here is <b>illustrative</b>, not real elevation data yet. Model units are assumed to be metres unless a city says otherwise. Budget figures are rough estimates, not mission data.</p>
+      <p class="fine" data-i18n="fine">Models come from <a href="https://github.com/InterImm/martian-cities">InterImm/martian-cities</a>. Terrain here is <b>illustrative</b>, not real elevation data yet. Model units are assumed to be metres unless a city says otherwise.</p>
       <button id="enter" class="btn btn-primary btn-lg" disabled>Loading city model…</button>
     </div>
   </div>
@@ -123,25 +122,12 @@
     <p class="note" id="sun-readout"></p>
   </section>
 
-  <aside id="panel" aria-label="Settlement budget">
-    <h2 data-i18n="budgetTitle">Settlement budget</h2>
-    <label class="pop"><span data-i18n="pop">Population</span> <output id="o-pop"></output>
-      <input id="pop" type="range" min="10" max="50000" step="10" value="1000"></label>
-    <div id="budget" class="tiles"></div>
-    <p class="note" data-i18n="budgetNote">Rough engineering estimates with the assumptions below, not mission data. Change them to test your own case.</p>
-    <details>
-      <summary data-i18n="assumptions">Assumptions</summary>
-      <div id="assume"></div>
-    </details>
-  </aside>
-
   <!-- Touch controls: shown on phones -->
   <p id="orbit-hint" data-i18n="hint">Drag to look around · pinch to zoom · two fingers to move</p>
   <div id="joy" aria-hidden="true"><div id="knob"></div></div>
   <button id="jump" class="btn" type="button" aria-label="Jump" data-i18n="jump">Jump</button>
   <nav id="tabs" aria-label="Panels">
     <button type="button" data-tab="dock" aria-pressed="false" data-i18n="tabSun">Sun</button>
-    <button type="button" data-tab="panel" aria-pressed="false" data-i18n="tabBudget">Budget</button>
     <button type="button" data-tab="info" data-i18n="tabAbout">About</button>
   </nav>
 </div>

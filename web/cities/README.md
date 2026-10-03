@@ -15,8 +15,7 @@ The site reads `cities/cities.json`. To add a city:
   "intro": "One or two sentences shown on the welcome card.",
   "model": { "file": "assets/my-city.glb", "format": "glb", "upAxis": "y", "scale": 1, "groundLevel": 0 },
   "terrain": { "flatRadius": 1500, "blendRadius": 2500 },
-  "camera": { "orbit": [0, 1000, 2200], "target": [0, 40, 0], "walkStart": [0, 600] },
-  "population": 1000
+  "camera": { "orbit": [0, 1000, 2200], "target": [0, 40, 0], "walkStart": [0, 600] }
 }
 ```
 

@@ -94,8 +94,8 @@ new STLLoader().load('assets/isidis-city-procyon.stl', geo => {
   scene.add(city);
   camera.position.set(0, 1500, 3200);
   orbit.target.set(0, 60, 0);
-  $('loading').remove();
-}, undefined, err => { $('loading').textContent = 'Could not load the city model: ' + err.message; });
+  const en = $('enter'); en.disabled = false; en.textContent = 'Enter the city';
+}, undefined, err => { $('enter').textContent = 'Could not load the city model: ' + err.message; });
 
 // ---- sun / sky --------------------------------------------------------------
 const skyDay = new THREE.Color(0xd9a07a), skyDusk = new THREE.Color(0x6d5a73), skyNight = new THREE.Color(0x0b0a12);
@@ -144,23 +144,27 @@ canvas.addEventListener('click', () => { if (mode === 'walk' && !walk.isLocked) 
 
 // ---- budget panel -----------------------------------------------------------
 const assume = { ...Object.fromEntries(Object.entries(DEFAULTS).map(([k, d]) => [k, d.v])) };
-function row(k, v, cls = '') { return `<tr${cls ? ` class="${cls}"` : ''}><td>${k}</td><td>${v}</td></tr>`; }
+function tile(k, v, unit, sub = '', cls = '') { return `<div class="tile ${cls}"><div class="k">${k}</div><div class="v">${v}<small>${unit}</small></div>${sub ? `<div class="s">${sub}</div>` : ''}</div>`; }
 function updateBudget() {
   const pop = +$('pop').value; $('o-pop').textContent = pop.toLocaleString();
   const b = budget(pop, assume);
   $('budget').innerHTML =
-    row('Power demand', fmt(b.powerMWhDay, 'MWh/day')) +
-    row('Solar array needed', fmt(b.panelM2, 'm²') + (b.panelKm2 >= 0.1 ? ` (${b.panelKm2.toFixed(2)} km²)` : '')) +
-    row('…or a reactor of', fmt(b.reactorKWe / 1000, 'MWe')) +
-    row('Storm storage if solar-only', fmt(b.stormStorageMWh, 'MWh'), 'warn') +
-    row('Oxygen', fmt(b.o2KgDay, 'kg/day')) +
-    row('Water make-up', fmt(b.waterMakeupLDay, 'L/day')) +
-    row('Farm area', fmt(b.farmM2, 'm²')) +
-    row('Pressurised volume', fmt(b.habM3, 'm³'));
+    tile('Power demand', fmt(b.powerMWhDay), 'MWh/day', 'about ' + fmt(b.reactorKWe / 1000) + ' MWe from a reactor') +
+    tile('Solar array', fmt(b.panelKm2 >= 0.1 ? b.panelKm2 : b.panelM2), b.panelKm2 >= 0.1 ? 'km²' : 'm²', 'if solar-only') +
+    tile('Dust-storm storage', fmt(b.stormStorageMWh), 'MWh', 'needed for a solar-only city; a reactor avoids it', 'wide warn') +
+    tile('Oxygen', fmt(b.o2KgDay), 'kg/day') +
+    tile('Water make-up', fmt(b.waterMakeupLDay), 'L/day') +
+    tile('Farm area', fmt(b.farmM2), 'm²') +
+    tile('Pressurised volume', fmt(b.habM3), 'm³');
 }
 $('pop').addEventListener('input', updateBudget);
 $('assume').innerHTML = Object.entries(DEFAULTS).map(([k, d]) => `<label>${d.label}<input type="number" step="any" data-k="${k}" value="${d.v}"></label>`).join('');
 $('assume').addEventListener('input', e => { const v = parseFloat(e.target.value); if (e.target.dataset.k && v >= 0) { assume[e.target.dataset.k] = v; updateBudget(); } });
+
+// ---- intro --------------------------------------------------------------
+$('enter').addEventListener('click', () => $('intro').classList.add('gone'));
+$('btn-info').addEventListener('click', () => $('intro').classList.remove('gone'));
+addEventListener('keydown', e => { if (e.code === 'Escape') $('intro').classList.add('gone'); });
 
 // ---- loop -------------------------------------------------------------------
 function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }

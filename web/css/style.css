@@ -76,11 +76,16 @@ canvas#view{touch-action:none;-webkit-tap-highlight-color:transparent}
   .modes .btn{min-height:2.5rem;padding:.25rem .9rem}
 
   /* sun and budget become bottom sheets opened from the tab bar */
-  #dock,#panel{display:none;left:.5rem;right:.5rem;width:auto;max-width:none;top:auto;bottom:3.6rem;height:auto;max-height:52%;border-radius:1rem;overflow:auto;z-index:3}
+  #dock,#panel{display:none;left:.5rem;right:.5rem;width:auto;max-width:none;top:auto;bottom:3.6rem;height:auto;max-height:40%;border-radius:1rem;overflow:auto;z-index:3}
   .explorer.show-dock #dock,.explorer.show-panel #panel{display:block}
   #dock{padding:.7rem 1rem .6rem}
   #panel{padding:.8rem}
-  #panel h2{font-size:1.1rem}
+  #panel h2{font-size:1rem;margin:0 0 .2rem}
+  #panel .tiles{gap:.4rem}
+  #panel .tile{padding:.4rem .6rem}
+  #panel .tile .v{font-size:1.1rem}
+  #panel .tile .s{font-size:.7rem}
+  #panel .note{font-size:.72rem;margin:.4rem 0}
   input[type=range]{height:2.25rem}
   input[type=range]::-webkit-slider-thumb{width:1.5rem;height:1.5rem}
   #assume input[type=number]{width:6rem;min-height:2rem;font-size:1rem}

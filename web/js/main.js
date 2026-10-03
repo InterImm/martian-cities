@@ -392,6 +392,8 @@ $('city').addEventListener('change', e => { $('intro').classList.remove('gone');
 // ---- loop -------------------------------------------------------------------
 const stage = $('explorer');
 function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+{ const hd = document.querySelector('.site-header'), ex = document.getElementById('explorer');
+  if (hd && ex) new ResizeObserver(() => { const h = hd.offsetHeight; if (h) ex.style.setProperty('--hh', h + 'px'); }).observe(hd); }
 addEventListener('resize', resize); new ResizeObserver(resize).observe(stage); resize();
 { const y = $('year'); if (y) y.textContent = new Date().getFullYear(); } // only in the fallback footer; the kit footer has its own year
 let last = performance.now();

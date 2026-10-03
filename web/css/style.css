@@ -2,7 +2,7 @@
 :root{--warn:#b26a00}
 @media (prefers-color-scheme:dark){:root{--warn:#ffcf70}}
 
-.explorer{position:relative;height:max(34rem,calc(100dvh - 4rem));overflow:hidden;background:#d9a07a}
+.explorer{position:relative;height:max(34rem,calc(100dvh - var(--hh,4.75rem)));overflow:hidden;background:#d9a07a}
 #view{position:absolute;inset:0;width:100%;height:100%;display:block}
 #hud,#dock,#facilities,#walk-help{z-index:2}
 kbd{display:inline-block;min-width:1.6em;padding:0 .4em;margin:0 .1em;text-align:center;background:var(--bg-alt);border:1px solid var(--border);border-bottom-width:2px;border-radius:var(--radius);font:.8em var(--font-mono)}
@@ -68,7 +68,17 @@ canvas#view{touch-action:none;-webkit-tap-highlight-color:transparent}
 
 /* ---------- phones and touch ---------- */
 @media (max-width:760px){
-  .explorer{height:calc(100dvh - 3.75rem);min-height:26rem}
+  .explorer{height:calc(100dvh - var(--hh,3.5rem));min-height:26rem}
+  /* compact one-row kit header on phones: logo, name and menu button inline, no tagline */
+  .site-header .header-inner{flex-wrap:nowrap;gap:.5rem;min-height:0;padding-block:.5rem}
+  .site-header .brand{min-width:0;flex:1}
+  .site-header .brand-name{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .site-header .brand-sub{display:none}
+  .site-header .brand-mark{width:1.75rem;height:1.75rem}
+  .site-header .nav-toggle{flex:none}
+  /* touch walking uses the whole screen: the header steps aside until you return to orbit */
+  body:has(.explorer.walking.touch) .site-header{display:none}
+  body:has(.explorer.walking.touch) .explorer{height:100dvh}
   #hud{top:.5rem;left:.5rem;right:.5rem;flex-direction:row;align-items:center;gap:.4rem}
   .cityhud{padding:.2rem .6rem;min-width:0;flex:1;flex-wrap:nowrap}
   .cityhud b{font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

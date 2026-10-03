@@ -278,9 +278,9 @@ let last = performance.now();
 renderer.setAnimationLoop(now => {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (mode === 'walk' && (walk.isLocked || touchWalk)) {
-    const run = keys.has('ShiftLeft') ? 3 : 1, speed = 4 * run;
+    const run = keys.has('ShiftLeft') ? 4 : 1, speed = 12 * run; // the city is ~4 km across
     if (touchWalk) {
-      const f = -joyVec.y, s = joyVec.x, sp = 6 * dt;
+      const f = -joyVec.y, s = joyVec.x, sp = (Math.hypot(joyVec.x, joyVec.y) > 0.9 ? 40 : 14) * dt; // push the stick to the rim to run
       camera.position.x += (-Math.sin(yaw) * f + Math.cos(yaw) * s) * sp;
       camera.position.z += (-Math.cos(yaw) * f - Math.sin(yaw) * s) * sp;
     } else {

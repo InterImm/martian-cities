@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Isidis Procyon – Martian city explorer</title>
+<meta name="description" content="Explore the InterImm Isidis Procyon Martian city in 3D and see what it takes to keep it alive. Runs entirely in your browser.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%2714%27 fill=%27%23e07b39%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.min.js" } }
+</script>
+</head>
+<body>
+<canvas id="view"></canvas>
+
+<header id="hud">
+  <h1>Isidis Procyon <small>a Martian city, explorable</small></h1>
+  <div class="modes">
+    <button id="btn-orbit" class="on">Orbit</button>
+    <button id="btn-walk">Walk</button>
+  </div>
+</header>
+
+<div id="loading">Loading city model…</div>
+
+<aside id="panel">
+  <section>
+    <h2>Time &amp; season</h2>
+    <label>Mars hour <output id="o-hour"></output>
+      <input id="hour" type="range" min="0" max="24.66" step="0.05" value="12"></label>
+    <label>Season (Ls) <output id="o-ls"></output>
+      <input id="ls" type="range" min="0" max="359" step="1" value="90"></label>
+    <p class="note" id="sun-readout"></p>
+  </section>
+
+  <section>
+    <h2>Settlement budget</h2>
+    <label>Population <output id="o-pop"></output>
+      <input id="pop" type="range" min="10" max="50000" step="10" value="1000"></label>
+    <table id="budget"></table>
+    <p class="note">Rough engineering estimates with the assumptions below, not mission data. Change them to test your own case.</p>
+    <details>
+      <summary>Assumptions</summary>
+      <div id="assume"></div>
+    </details>
+  </section>
+
+  <section class="note">
+    <h2>About</h2>
+    <p>The 3D city is the InterImm <a href="https://github.com/InterImm/martian-cities">martian-cities</a> SketchUp model. Terrain here is <b>illustrative</b>, not real Isidis elevation data yet. Model units are assumed to be metres.</p>
+    <p id="walk-help" hidden>Walk: click the scene, then W A S D to move, Space to jump (Mars gravity 3.71 m/s²), Shift to run, Esc to release.</p>
+  </section>
+</aside>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

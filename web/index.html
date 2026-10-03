@@ -16,7 +16,7 @@
 <!-- Shared InterImm look (colours, fonts, header, footer), served by interimm.org. See
      https://github.com/InterImm/interimm.github.io/blob/hugo/kit/README.md -->
 <link rel="stylesheet" href="https://interimm.org/kit/interimm.css">
-<link rel="stylesheet" href="css/style.css?v=20261003e">
+<link rel="stylesheet" href="css/style.css?v=20261003f">
 <script type="importmap">
 { "imports": { "three": "./vendor/three.module.min.js" } }
 </script>
@@ -91,23 +91,23 @@
     <div class="intro-card">
       <p class="eyebrow" id="intro-region">InterImm · Mars</p>
       <h1 id="intro-title">Isidis Procyon</h1>
-      <p class="lede">A Martian city, explorable.</p>
+      <p class="lede" data-i18n="lede">A Martian city, explorable.</p>
       <p id="intro-text">The 3D city is the InterImm martian-cities SketchUp model. Fly around it, walk its terraces under the Martian sun, then set a population and see what it takes to keep everyone alive.</p>
       <ul>
-        <li><b>Orbit</b> to look down on the whole settlement.</li>
-        <li><b>Walk</b> at street level with Mars gravity (3.71 m/s²).</li>
-        <li><b>Budget</b> shows power, oxygen, water and farmland for any population.</li>
+        <li data-i18n="li1"><b>Orbit</b> to look down on the whole settlement.</li>
+        <li data-i18n="li2"><b>Walk</b> at street level with Mars gravity (3.71 m/s²).</li>
+        <li data-i18n="li3"><b>Budget</b> shows power, oxygen, water and farmland for any population.</li>
       </ul>
-      <p class="fine">Models come from <a href="https://github.com/InterImm/martian-cities">InterImm/martian-cities</a>. Terrain here is <b>illustrative</b>, not real elevation data yet. Model units are assumed to be metres unless a city says otherwise. Budget figures are rough estimates, not mission data.</p>
+      <p class="fine" data-i18n="fine">Models come from <a href="https://github.com/InterImm/martian-cities">InterImm/martian-cities</a>. Terrain here is <b>illustrative</b>, not real elevation data yet. Model units are assumed to be metres unless a city says otherwise. Budget figures are rough estimates, not mission data.</p>
       <button id="enter" class="btn btn-primary btn-lg" disabled>Loading city model…</button>
     </div>
   </div>
 
   <div id="hud">
-    <div class="cityhud"><b id="brand-name">Isidis Procyon</b><select id="city" aria-label="City" hidden></select><small>a Martian city, explorable</small></div>
+    <div class="cityhud"><b id="brand-name">Isidis Procyon</b><select id="city" aria-label="City" hidden></select><small data-i18n="tagline">a Martian city, explorable</small></div>
     <nav class="modes" aria-label="View mode">
-      <button id="btn-orbit" class="btn on">Orbit</button>
-      <button id="btn-walk" class="btn">Walk</button>
+      <button id="btn-orbit" class="btn on" data-i18n="orbit">Orbit</button>
+      <button id="btn-walk" class="btn" data-i18n="walk">Walk</button>
       <button id="btn-info" class="btn" aria-label="About this city">?</button>
     </nav>
   </div>
@@ -115,34 +115,34 @@
   <p id="walk-help" hidden>Click the scene, then <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Space</kbd> to jump, <kbd>Shift</kbd> to run, <kbd>Esc</kbd> to release.</p>
 
   <section id="dock" aria-label="Sun controls">
-    <button id="live" class="btn on" type="button" aria-pressed="true">Live Mars time</button>
-    <label>Mars hour <output id="o-hour"></output>
+    <button id="live" class="btn on" type="button" aria-pressed="true" data-i18n="live">Live Mars time</button>
+    <label><span data-i18n="hour">Mars hour</span> <output id="o-hour"></output>
       <input id="hour" type="range" min="0" max="24.66" step="0.01" value="12"></label>
-    <label>Season (Ls) <output id="o-ls"></output>
+    <label><span data-i18n="season">Season (Ls)</span> <output id="o-ls"></output>
       <input id="ls" type="range" min="0" max="359.9" step="0.1" value="90"></label>
     <p class="note" id="sun-readout"></p>
   </section>
 
   <aside id="panel" aria-label="Settlement budget">
-    <h2>Settlement budget</h2>
-    <label class="pop">Population <output id="o-pop"></output>
+    <h2 data-i18n="budgetTitle">Settlement budget</h2>
+    <label class="pop"><span data-i18n="pop">Population</span> <output id="o-pop"></output>
       <input id="pop" type="range" min="10" max="50000" step="10" value="1000"></label>
     <div id="budget" class="tiles"></div>
-    <p class="note">Rough engineering estimates with the assumptions below, not mission data. Change them to test your own case.</p>
+    <p class="note" data-i18n="budgetNote">Rough engineering estimates with the assumptions below, not mission data. Change them to test your own case.</p>
     <details>
-      <summary>Assumptions</summary>
+      <summary data-i18n="assumptions">Assumptions</summary>
       <div id="assume"></div>
     </details>
   </aside>
 
   <!-- Touch controls: shown on phones -->
-  <p id="orbit-hint">Drag to look around · pinch to zoom · two fingers to move</p>
+  <p id="orbit-hint" data-i18n="hint">Drag to look around · pinch to zoom · two fingers to move</p>
   <div id="joy" aria-hidden="true"><div id="knob"></div></div>
-  <button id="jump" class="btn" type="button" aria-label="Jump">Jump</button>
+  <button id="jump" class="btn" type="button" aria-label="Jump" data-i18n="jump">Jump</button>
   <nav id="tabs" aria-label="Panels">
-    <button type="button" data-tab="dock" aria-pressed="false">Sun</button>
-    <button type="button" data-tab="panel" aria-pressed="false">Budget</button>
-    <button type="button" data-tab="info">About</button>
+    <button type="button" data-tab="dock" aria-pressed="false" data-i18n="tabSun">Sun</button>
+    <button type="button" data-tab="panel" aria-pressed="false" data-i18n="tabBudget">Budget</button>
+    <button type="button" data-tab="info" data-i18n="tabAbout">About</button>
   </nav>
 </div>
 </main>
@@ -185,6 +185,12 @@
   </div>
 </footer>
 
-<script type="module" src="js/main.js?v=20261003e"></script>
+<script>
+// Runs before the kit script: tell it which language's menu to load, and show startup errors instead of hanging on "Loading".
+if (/[?&]lang=cn\b/.test(location.search)) for (const e of document.querySelectorAll('[data-interimm-header],[data-interimm-footer]')) e.dataset.lang = 'cn';
+const fail = m => { const b = document.getElementById('enter'); if (b && b.disabled) b.textContent = 'Could not start: ' + m; };
+addEventListener('error', e => fail(e.message)); addEventListener('unhandledrejection', e => fail(e.reason && e.reason.message || e.reason));
+</script>
+<script type="module" src="js/main.js?v=20261003f"></script>
 </body>
 </html>

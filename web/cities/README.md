@@ -21,6 +21,7 @@ The site reads `cities/cities.json`. To add a city:
 ```
 
 - `lat` is the latitude in degrees north and `lon` the longitude in degrees east. Together they set the sun path and the live local solar time.
+- `region_cn` and `intro_cn` are the Chinese region name and welcome text, shown with `?lang=cn`. Without them the English text is used.
 - `model.scale` converts model units to metres (use `0.0254` for inches, `0.001` for mm).
 - `model.upAxis` is `z` for SketchUp STL exports, usually `y` for glTF.
 - `model.groundLevel` is the height, in the model's own units, of the surface people walk on. It is placed at terrain level.

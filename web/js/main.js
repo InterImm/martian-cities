@@ -5,6 +5,7 @@ import { OrbitControls } from '../vendor/OrbitControls.js';
 import { PointerLockControls } from '../vendor/PointerLockControls.js';
 import { sunPosition, budget, fmt, DEFAULTS, MARS } from './sim.js';
 import { marsState } from './marstime.js';
+import { L, lang, ASSUME_CN, fixLangLinks } from './i18n.js';
 
 const GROUND_Y = -0.4;            // flat zone sits just below the model's ground slabs
 const TERRAIN_SIZE = 16000;
@@ -229,11 +230,11 @@ async function showCity(id) {
   const next = cities.find(c => c.id === id) || cities[0];
   const token = ++loadToken;
   cfg = next; seed = seedFrom(cfg.id);
-  const en = $('enter'); en.disabled = true; en.textContent = 'Loading city model…';
+  const en = $('enter'); en.disabled = true; en.textContent = L('Loading city model…', '正在加载城市模型…');
   $('brand-name').textContent = cfg.name; $('intro-title').textContent = cfg.name;
-  $('intro-region').textContent = 'InterImm · ' + cfg.region + ', Mars';
-  $('intro-text').textContent = cfg.intro;
-  document.title = cfg.name + ' | InterImm';
+  $('intro-region').textContent = L('InterImm · ' + cfg.region + ', Mars', 'InterImm · ' + (cfg.region_cn || cfg.region) + ' · 火星');
+  $('intro-text').textContent = L(cfg.intro, cfg.intro_cn || cfg.intro);
+  document.title = cfg.name + ' | InterImm'; fixLangLinks();
   if ($('city').value !== cfg.id) $('city').value = cfg.id;
   history.replaceState(null, '', '#city=' + cfg.id);
   if (mode === 'walk') setMode('orbit');
@@ -248,8 +249,8 @@ async function showCity(id) {
     camera.position.set(...cfg.camera.orbit); orbit.target.set(...cfg.camera.target); camera.lookAt(orbit.target);
     $('pop').value = cfg.population ?? 1000;
     live ? applyLive() : updateSun(); updateBudget();
-    en.disabled = false; en.textContent = 'Enter the city';
-  } catch (err) { if (token === loadToken) en.textContent = 'Could not load the city model: ' + err.message; }
+    en.disabled = false; en.textContent = L('Enter the city', '进入城市');
+  } catch (err) { if (token === loadToken) en.textContent = L('Could not load the city model: ', '无法加载城市模型：') + err.message; }
 }
 
 // ---- sun / sky --------------------------------------------------------------
@@ -286,7 +287,9 @@ function updateSun() {
   placePhobos(hour);
   $('o-hour').textContent = hour.toFixed(1) + ' h';
   $('o-ls').textContent = 'Ls ' + ls + '°';
-  $('sun-readout').textContent = `Sun ${(el * 180 / Math.PI).toFixed(0)}° above the horizon at ${(cfg?.lat ?? 12.9).toFixed(1)}°N` + (el < 0 ? ' (night)' : '') + (liveInfo ? ` · local solar time ${hm(liveInfo.ltst)} · Ls ${liveInfo.ls.toFixed(1)}° · sol ${Math.floor(liveInfo.msd).toLocaleString()}` : '');
+  const deg = (el * 180 / Math.PI).toFixed(0), lat = (cfg?.lat ?? 12.9).toFixed(1), n = el < 0;
+  $('sun-readout').textContent = L(`Sun ${deg}° above the horizon at ${lat}°N` + (n ? ' (night)' : ''), `太阳高度 ${deg}°（纬度 ${lat}°N）` + (n ? '（夜间）' : ''))
+    + (liveInfo ? L(` · local solar time ${hm(liveInfo.ltst)} · Ls ${liveInfo.ls.toFixed(1)}° · sol ${Math.floor(liveInfo.msd).toLocaleString()}`, ` · 当地太阳时 ${hm(liveInfo.ltst)} · Ls ${liveInfo.ls.toFixed(1)}° · 火星日 ${Math.floor(liveInfo.msd).toLocaleString()}`) : '');
 }
 // Live mode: drive the sliders from the real clock at the city's longitude. Touching a slider switches it off.
 let live = true, liveInfo = null;
@@ -323,8 +326,8 @@ function setMode(m) {
   stage0.classList.toggle('walking', m === 'walk');
   $('walk-help').hidden = m !== 'walk';
   $('walk-help').innerHTML = isTouch
-    ? 'Left thumb to move, drag anywhere else to look.'
-    : 'Click the scene, then <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Space</kbd> to jump, <kbd>Shift</kbd> to run, <kbd>Esc</kbd> to release.';
+    ? L('Left thumb to move, drag anywhere else to look.', '左手拇指移动，其余位置拖动环顾。')
+    : L('Click the scene, then <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Space</kbd> to jump, <kbd>Shift</kbd> to run, <kbd>Esc</kbd> to release.', '点击场景，然后用 <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移动，<kbd>空格</kbd> 跳跃，<kbd>Shift</kbd> 奔跑，<kbd>Esc</kbd> 释放鼠标。');
   orbit.enabled = m === 'orbit';
   touchWalk = false;
   if (m === 'walk') {
@@ -351,16 +354,16 @@ function updateBudget() {
   const pop = +$('pop').value; $('o-pop').textContent = pop.toLocaleString();
   const b = budget(pop, assume);
   $('budget').innerHTML =
-    tile('Power demand', fmt(b.powerMWhDay), 'MWh/day', 'about ' + fmt(b.reactorKWe / 1000) + ' MWe from a reactor') +
-    tile('Solar array', fmt(b.panelKm2 >= 0.1 ? b.panelKm2 : b.panelM2), b.panelKm2 >= 0.1 ? 'km²' : 'm²', 'if solar-only') +
-    tile('Dust-storm storage', fmt(b.stormStorageMWh), 'MWh', 'needed for a solar-only city; a reactor avoids it', 'wide warn') +
-    tile('Oxygen', fmt(b.o2KgDay), 'kg/day') +
-    tile('Water make-up', fmt(b.waterMakeupLDay), 'L/day') +
-    tile('Farm area', fmt(b.farmM2), 'm²') +
-    tile('Pressurised volume', fmt(b.habM3), 'm³');
+    tile(L('Power demand', '电力需求'), fmt(b.powerMWhDay), L('MWh/day', 'MWh/天'), L('about ' + fmt(b.reactorKWe / 1000) + ' MWe from a reactor', '约需 ' + fmt(b.reactorKWe / 1000) + ' MWe 核反应堆')) +
+    tile(L('Solar array', '太阳能板面积'), fmt(b.panelKm2 >= 0.1 ? b.panelKm2 : b.panelM2), b.panelKm2 >= 0.1 ? 'km²' : 'm²', L('if solar-only', '仅用太阳能时')) +
+    tile(L('Dust-storm storage', '沙尘暴储能'), fmt(b.stormStorageMWh), 'MWh', L('needed for a solar-only city; a reactor avoids it', '纯太阳能城市所需；用核反应堆可避免'), 'wide warn') +
+    tile(L('Oxygen', '氧气'), fmt(b.o2KgDay), L('kg/day', 'kg/天')) +
+    tile(L('Water make-up', '补水'), fmt(b.waterMakeupLDay), L('L/day', 'L/天')) +
+    tile(L('Farm area', '农田面积'), fmt(b.farmM2), 'm²') +
+    tile(L('Pressurised volume', '加压空间体积'), fmt(b.habM3), 'm³');
 }
 $('pop').addEventListener('input', updateBudget);
-$('assume').innerHTML = Object.entries(DEFAULTS).map(([k, d]) => `<label>${d.label}<input type="number" step="any" data-k="${k}" value="${d.v}"></label>`).join('');
+$('assume').innerHTML = Object.entries(DEFAULTS).map(([k, d]) => `<label>${lang === 'cn' ? ASSUME_CN[k] || d.label : d.label}<input type="number" step="any" data-k="${k}" value="${d.v}"></label>`).join('');
 $('assume').addEventListener('input', e => { const v = parseFloat(e.target.value); if (e.target.dataset.k && v >= 0) { assume[e.target.dataset.k] = v; updateBudget(); } });
 
 // ---- touch controls and phone tabs ------------------------------------------
@@ -443,5 +446,5 @@ window.__mars = { camera, scene, setMode, showCity, get city() { return cityGrou
     sel.hidden = cities.length < 2;
     const want = /city=([\w-]+)/.exec(location.hash)?.[1];
     await showCity(want);
-  } catch (err) { $('enter').textContent = 'Could not load the city list: ' + err.message; }
+  } catch (err) { $('enter').textContent = L('Could not load the city list: ', '无法加载城市列表：') + err.message; }
 })();

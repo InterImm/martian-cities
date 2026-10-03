@@ -28,6 +28,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      # Phones cache pages and scripts for minutes; tie every asset URL to this commit so a new page never meets an old script.
+      - name: Version asset URLs
+        run: |
+          v=${GITHUB_SHA::8}
+          sed -i -E "s/\?v=[A-Za-z0-9]+/?v=$v/g" web/index.html
+          sed -i -E "s#from '\./(sim|marstime|i18n)\.js'#from './\1.js?v=$v'#" web/js/main.js
       - uses: actions/upload-pages-artifact@v3
         with: { path: web }
       - id: deployment

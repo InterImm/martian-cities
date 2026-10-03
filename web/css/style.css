@@ -113,3 +113,6 @@ canvas#view{touch-action:none;-webkit-tap-highlight-color:transparent}
   .intro-card .fine{font-size:.75rem}
   #enter{position:sticky;bottom:0;min-height:3rem}
 }
+
+#live{margin:0 0 .5rem;padding:.3rem .8rem;font-size:.85rem}
+#live:not(.on){opacity:.75}

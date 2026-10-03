@@ -16,4 +16,6 @@ assert.ok(Math.abs(b.panelM2 - 72727.27) < 1);
 assert.ok(Math.abs(budget(2000).panelM2 / b.panelM2 - 2) < 1e-9);
 assert.ok(Math.abs(b.waterMakeupLDay - 1250) < 1e-6);
 assert.ok(Math.abs(b.stormStorageMWh - 630) < 1e-6);
+// Latitude parameter: noon equinox elevation is 90 - lat anywhere.
+s = sunPosition(MARS.solHours / 2, 0, 40); assert.ok(Math.abs(d(s.el) - 50) < 0.01, 'noon elevation at 40N');
 console.log('sim tests pass');

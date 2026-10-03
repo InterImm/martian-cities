@@ -61,13 +61,50 @@ label.pop{margin:.6rem 0 .9rem}
 #enter{margin-top:.5rem;width:100%}
 #enter:disabled{opacity:.6;cursor:progress}
 
+canvas#view{touch-action:none;-webkit-tap-highlight-color:transparent}
+#orbit-hint,#joy,#jump,#tabs{display:none}
+
+/* ---------- phones and touch ---------- */
 @media (max-width:760px){
-  #hud{flex-direction:column;align-items:stretch;gap:.4rem}
-  .cityhud{border-radius:1rem;padding:.3rem .75rem}
-  .cityhud small{display:none}
-  .modes{align-self:flex-start}
-  #panel{top:auto;bottom:9.6rem;height:34%;left:.75rem;right:.75rem;width:auto;max-width:none}
-  #dock{right:.75rem;width:auto;padding:.5rem .9rem .4rem}
-  #dock label{margin:.15rem 0}
-  #walk-help{top:auto;bottom:10rem}
+  .explorer{height:calc(100dvh - 3.75rem);min-height:26rem}
+  #hud{top:.5rem;left:.5rem;right:.5rem;flex-direction:row;align-items:center;gap:.4rem}
+  .cityhud{padding:.2rem .6rem;border-radius:999px;min-width:0;flex:1;flex-wrap:nowrap}
+  .cityhud b{font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cityhud small,#btn-info{display:none}
+  .cityhud select{max-width:9rem;min-height:2.25rem}
+  .modes{flex:none}
+  .modes .btn{min-height:2.5rem;padding:.25rem .9rem}
+
+  /* sun and budget become bottom sheets opened from the tab bar */
+  #dock,#panel{display:none;left:.5rem;right:.5rem;width:auto;max-width:none;top:auto;bottom:3.6rem;height:auto;max-height:52%;border-radius:1rem;overflow:auto;z-index:3}
+  .explorer.show-dock #dock,.explorer.show-panel #panel{display:block}
+  #dock{padding:.7rem 1rem .6rem}
+  #panel{padding:.8rem}
+  #panel h2{font-size:1.1rem}
+  input[type=range]{height:2.25rem}
+  input[type=range]::-webkit-slider-thumb{width:1.5rem;height:1.5rem}
+  #assume input[type=number]{width:6rem;min-height:2rem;font-size:1rem}
+
+  #tabs{display:flex;position:absolute;left:.5rem;right:.5rem;bottom:.5rem;gap:.4rem;padding:.3rem;border-radius:999px;z-index:4;background:var(--glass);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid var(--border)}
+  #tabs button{flex:1;min-height:2.6rem;border:0;border-radius:999px;background:transparent;color:var(--text);font:inherit;font-weight:600;cursor:pointer}
+  #tabs button[aria-pressed=true]{background:var(--accent);color:var(--accent-text)}
+
+  #orbit-hint{display:block;position:absolute;left:50%;transform:translateX(-50%);bottom:4.3rem;margin:0;padding:.35rem .8rem;border-radius:999px;font-size:.8rem;text-align:center;background:var(--glass);border:1px solid var(--border);max-width:calc(100% - 1rem);pointer-events:none;z-index:2;transition:opacity .6s}
+  #orbit-hint.gone{opacity:0}
+  .explorer.walking #orbit-hint{display:none}
+
+  #walk-help{top:3.4rem;bottom:auto;font-size:.8rem}
+  .explorer.walking.touch #joy,.explorer.walking.touch #jump{display:block}
+  #joy{position:absolute;left:1.2rem;bottom:5rem;width:7.5rem;height:7.5rem;border-radius:50%;background:var(--glass);border:2px solid var(--border);touch-action:none;z-index:3}
+  #knob{position:absolute;left:50%;top:50%;width:3.2rem;height:3.2rem;margin:-1.6rem 0 0 -1.6rem;border-radius:50%;background:var(--accent);opacity:.9}
+  #jump{position:absolute;right:1.2rem;bottom:5.6rem;width:4.6rem;height:4.6rem;border-radius:50%;padding:0;background:var(--accent);color:var(--accent-text);border:0;font-weight:700;z-index:3}
+
+  /* intro: compact, scrolls, button always reachable */
+  #intro{padding:.5rem;place-items:start center}
+  .intro-card{padding:1.1rem 1.1rem .8rem;max-height:100%;overflow:auto;border-radius:1rem}
+  .intro-card h1{font-size:1.8rem}
+  .intro-card .lede{font-size:1.05rem;margin-bottom:.6rem}
+  .intro-card ul{margin:.4rem 0;padding-left:1.1rem}
+  .intro-card .fine{font-size:.75rem}
+  #enter{position:sticky;bottom:0;min-height:3rem}
 }

@@ -24,13 +24,18 @@ sun.shadow.mapSize.set(4096, 4096);
 const sc = sun.shadow.camera; sc.left = -2600; sc.right = 2600; sc.top = 2600; sc.bottom = -2600; sc.near = 100; sc.far = 9000;
 sun.shadow.bias = -0.0004;
 scene.add(sun, sun.target);
-const hemi = new THREE.HemisphereLight(0xf0b894, 0x8a5a40, 0.6);
+const hemi = new THREE.HemisphereLight(0xf5c9a8, 0xb07a5a, 0.6);
 scene.add(hemi);
 
 const orbit = new OrbitControls(camera, canvas);
 orbit.enableDamping = true; orbit.maxPolarAngle = Math.PI * 0.495; orbit.minDistance = 20; orbit.maxDistance = 20000;
 const walk = new PointerLockControls(camera, document.body);
 let mode = 'orbit';
+const isTouch = matchMedia('(pointer: coarse)').matches;
+let touchWalk = false, yaw = 0, pitch = 0;
+const joyVec = { x: 0, y: 0 };
+const stage0 = document.getElementById('explorer');
+if (isTouch) stage0.classList.add('touch');
 
 // ---- current city -----------------------------------------------------------
 let cities = [], cfg = null, terrainMesh = null, cityGroup = null, loadToken = 0;
@@ -159,7 +164,7 @@ function updateSun() {
   sun.target.position.set(0, 0, 0);
   const up = Math.max(0, Math.sin(el));
   sun.intensity = 3.2 * Math.min(1, up * 4);
-  hemi.intensity = 0.08 + 1.0 * Math.min(1, Math.max(0, (Math.sin(el) + 0.15) * 3));
+  hemi.intensity = 0.08 + 1.7 * Math.min(1, Math.max(0, (Math.sin(el) + 0.15) * 3));
   const k = THREE.MathUtils.clamp((Math.sin(el) + 0.1) / 0.45, 0, 1);
   const sky = skyNight.clone().lerp(skyDusk, Math.min(1, k * 2)).lerp(skyDay, Math.max(0, k * 2 - 1));
   scene.background = sky; scene.fog = new THREE.Fog(sky, 5000, 26000);
@@ -170,6 +175,7 @@ function updateSun() {
 $('hour').addEventListener('input', updateSun); $('ls').addEventListener('input', updateSun);
 
 // ---- walk mode --------------------------------------------------------------
+let jumpQueued = false;
 const keys = new Set(); const vel = new THREE.Vector3(); let onGround = true;
 addEventListener('keydown', e => keys.add(e.code)); addEventListener('keyup', e => keys.delete(e.code));
 const ray = new THREE.Raycaster(); const down = new THREE.Vector3(0, -1, 0);
@@ -181,14 +187,24 @@ function floorAt(x, z) {
 function setMode(m) {
   mode = m;
   $('btn-orbit').classList.toggle('on', m === 'orbit'); $('btn-walk').classList.toggle('on', m === 'walk');
+  stage0.classList.toggle('walking', m === 'walk');
   $('walk-help').hidden = m !== 'walk';
+  $('walk-help').innerHTML = isTouch
+    ? 'Left thumb to move, drag anywhere else to look.'
+    : 'Click the scene, then <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Space</kbd> to jump, <kbd>Shift</kbd> to run, <kbd>Esc</kbd> to release.';
   orbit.enabled = m === 'orbit';
+  touchWalk = false;
   if (m === 'walk') {
     const [wx, wz] = cfg.camera.walkStart;
     camera.position.set(wx, 0, wz); camera.position.y = floorAt(wx, wz) + 1.7; camera.lookAt(...cfg.camera.target);
-    vel.set(0, 0, 0); walk.lock();
+    vel.set(0, 0, 0);
+    if (isTouch) {
+      touchWalk = true; camera.rotation.order = 'YXZ'; yaw = camera.rotation.y; pitch = 0; camera.rotation.set(pitch, yaw, 0);
+      closeSheets();
+    } else walk.lock();
   } else {
     if (walk.isLocked) walk.unlock();
+    camera.rotation.order = 'XYZ';
     camera.position.set(...cfg.camera.orbit); orbit.target.set(...cfg.camera.target); camera.lookAt(orbit.target);
   }
 }
@@ -214,6 +230,38 @@ $('pop').addEventListener('input', updateBudget);
 $('assume').innerHTML = Object.entries(DEFAULTS).map(([k, d]) => `<label>${d.label}<input type="number" step="any" data-k="${k}" value="${d.v}"></label>`).join('');
 $('assume').addEventListener('input', e => { const v = parseFloat(e.target.value); if (e.target.dataset.k && v >= 0) { assume[e.target.dataset.k] = v; updateBudget(); } });
 
+// ---- touch controls and phone tabs ------------------------------------------
+function closeSheets() { stage0.classList.remove('show-dock', 'show-panel'); document.querySelectorAll('#tabs [aria-pressed]').forEach(b => b.setAttribute('aria-pressed', 'false')); }
+$('tabs').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.tab === 'info') { closeSheets(); $('intro').classList.remove('gone'); return; }
+  const was = stage0.classList.contains('show-' + b.dataset.tab);
+  closeSheets();
+  if (!was) { stage0.classList.add('show-' + b.dataset.tab); b.setAttribute('aria-pressed', 'true'); }
+});
+setTimeout(() => $('orbit-hint').classList.add('gone'), 8000);
+$('enter').addEventListener('click', () => $('orbit-hint').classList.remove('gone'));
+
+// virtual joystick (left thumb) and drag-to-look (anywhere else on the scene)
+{
+  const joy = $('joy'), knob = $('knob'); let joyId = null, lookId = null, lx = 0, ly = 0;
+  const R = 48;
+  const setKnob = (dx, dy) => { const d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / R); joyVec.x = dx / d * k; joyVec.y = dy / d * k; knob.style.transform = `translate(${joyVec.x * R}px, ${joyVec.y * R}px)`; };
+  joy.addEventListener('pointerdown', e => { joyId = e.pointerId; joy.setPointerCapture(joyId); const r = joy.getBoundingClientRect(); setKnob(e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2); });
+  joy.addEventListener('pointermove', e => { if (e.pointerId !== joyId) return; const r = joy.getBoundingClientRect(); setKnob(e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2); });
+  const joyEnd = e => { if (e.pointerId !== joyId) return; joyId = null; joyVec.x = joyVec.y = 0; knob.style.transform = ''; };
+  joy.addEventListener('pointerup', joyEnd); joy.addEventListener('pointercancel', joyEnd);
+  canvas.addEventListener('pointerdown', e => { if (!touchWalk || lookId !== null) return; lookId = e.pointerId; lx = e.clientX; ly = e.clientY; canvas.setPointerCapture(lookId); });
+  canvas.addEventListener('pointermove', e => {
+    if (!touchWalk || e.pointerId !== lookId) return;
+    yaw -= (e.clientX - lx) * 0.005; pitch = Math.max(-1.3, Math.min(1.3, pitch - (e.clientY - ly) * 0.005)); lx = e.clientX; ly = e.clientY;
+    camera.rotation.set(pitch, yaw, 0);
+  });
+  const lookEnd = e => { if (e.pointerId === lookId) lookId = null; };
+  canvas.addEventListener('pointerup', lookEnd); canvas.addEventListener('pointercancel', lookEnd);
+  $('jump').addEventListener('pointerdown', e => { e.preventDefault(); jumpQueued = true; });
+}
+
 // ---- intro ------------------------------------------------------------------
 $('enter').addEventListener('click', () => $('intro').classList.add('gone'));
 $('btn-info').addEventListener('click', () => $('intro').classList.remove('gone'));
@@ -228,13 +276,19 @@ $('year').textContent = new Date().getFullYear();
 let last = performance.now();
 renderer.setAnimationLoop(now => {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
-  if (mode === 'walk' && walk.isLocked) {
+  if (mode === 'walk' && (walk.isLocked || touchWalk)) {
     const run = keys.has('ShiftLeft') ? 3 : 1, speed = 4 * run;
-    const f = (keys.has('KeyW') ? 1 : 0) - (keys.has('KeyS') ? 1 : 0), s = (keys.has('KeyD') ? 1 : 0) - (keys.has('KeyA') ? 1 : 0);
-    walk.moveForward(f * speed * dt); walk.moveRight(s * speed * dt);
+    if (touchWalk) {
+      const f = -joyVec.y, s = joyVec.x, sp = 6 * dt;
+      camera.position.x += (-Math.sin(yaw) * f + Math.cos(yaw) * s) * sp;
+      camera.position.z += (-Math.cos(yaw) * f - Math.sin(yaw) * s) * sp;
+    } else {
+      const f = (keys.has('KeyW') ? 1 : 0) - (keys.has('KeyS') ? 1 : 0), s = (keys.has('KeyD') ? 1 : 0) - (keys.has('KeyA') ? 1 : 0);
+      walk.moveForward(f * speed * dt); walk.moveRight(s * speed * dt);
+    }
     const fl = floorAt(camera.position.x, camera.position.z) + 1.7;
     vel.y -= MARS_G * dt;
-    if (keys.has('Space') && onGround) { vel.y = 4.2; onGround = false; }
+    if ((keys.has('Space') || jumpQueued) && onGround) { jumpQueued = false; vel.y = 4.2; onGround = false; }
     camera.position.y += vel.y * dt;
     if (camera.position.y <= fl) { camera.position.y = fl; vel.y = 0; onGround = true; } else if (camera.position.y > fl + 0.05) onGround = false;
   } else if (mode === 'orbit') orbit.update();

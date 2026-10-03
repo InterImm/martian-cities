@@ -3,9 +3,9 @@ import { STLLoader } from '../vendor/STLLoader.js';
 import { GLTFLoader } from '../vendor/GLTFLoader.js';
 import { OrbitControls } from '../vendor/OrbitControls.js';
 import { PointerLockControls } from '../vendor/PointerLockControls.js';
-import { sunPosition, budget, fmt, DEFAULTS, MARS } from './sim.js';
+import { sunPosition, MARS } from './sim.js';
 import { marsState } from './marstime.js';
-import { L, lang, ASSUME_CN, fixLangLinks } from './i18n.js';
+import { L, fixLangLinks } from './i18n.js';
 
 const GROUND_Y = -0.4;            // flat zone sits just below the model's ground slabs
 const TERRAIN_SIZE = 16000;
@@ -247,8 +247,7 @@ async function showCity(id) {
     if (token !== loadToken) return;          // another city was picked meanwhile
     cityGroup = group; scene.add(group);
     camera.position.set(...cfg.camera.orbit); orbit.target.set(...cfg.camera.target); camera.lookAt(orbit.target);
-    $('pop').value = cfg.population ?? 1000;
-    live ? applyLive() : updateSun(); updateBudget();
+    live ? applyLive() : updateSun();
     en.disabled = false; en.textContent = L('Enter the city', '进入城市');
   } catch (err) { if (token === loadToken) en.textContent = L('Could not load the city model: ', '无法加载城市模型：') + err.message; }
 }
@@ -347,27 +346,8 @@ function setMode(m) {
 $('btn-orbit').onclick = () => setMode('orbit'); $('btn-walk').onclick = () => setMode('walk');
 canvas.addEventListener('click', () => { if (mode === 'walk' && !walk.isLocked) walk.lock(); });
 
-// ---- budget panel -----------------------------------------------------------
-const assume = { ...Object.fromEntries(Object.entries(DEFAULTS).map(([k, d]) => [k, d.v])) };
-function tile(k, v, unit, sub = '', cls = '') { return `<div class="tile ${cls}"><div class="k">${k}</div><div class="v">${v}<small>${unit}</small></div>${sub ? `<div class="s">${sub}</div>` : ''}</div>`; }
-function updateBudget() {
-  const pop = +$('pop').value; $('o-pop').textContent = pop.toLocaleString();
-  const b = budget(pop, assume);
-  $('budget').innerHTML =
-    tile(L('Power demand', '电力需求'), fmt(b.powerMWhDay), L('MWh/day', 'MWh/天'), L('about ' + fmt(b.reactorKWe / 1000) + ' MWe from a reactor', '约需 ' + fmt(b.reactorKWe / 1000) + ' MWe 核反应堆')) +
-    tile(L('Solar array', '太阳能板面积'), fmt(b.panelKm2 >= 0.1 ? b.panelKm2 : b.panelM2), b.panelKm2 >= 0.1 ? 'km²' : 'm²', L('if solar-only', '仅用太阳能时')) +
-    tile(L('Dust-storm storage', '沙尘暴储能'), fmt(b.stormStorageMWh), 'MWh', L('needed for a solar-only city; a reactor avoids it', '纯太阳能城市所需；用核反应堆可避免'), 'wide warn') +
-    tile(L('Oxygen', '氧气'), fmt(b.o2KgDay), L('kg/day', 'kg/天')) +
-    tile(L('Water make-up', '补水'), fmt(b.waterMakeupLDay), L('L/day', 'L/天')) +
-    tile(L('Farm area', '农田面积'), fmt(b.farmM2), 'm²') +
-    tile(L('Pressurised volume', '加压空间体积'), fmt(b.habM3), 'm³');
-}
-$('pop').addEventListener('input', updateBudget);
-$('assume').innerHTML = Object.entries(DEFAULTS).map(([k, d]) => `<label>${lang === 'cn' ? ASSUME_CN[k] || d.label : d.label}<input type="number" step="any" data-k="${k}" value="${d.v}"></label>`).join('');
-$('assume').addEventListener('input', e => { const v = parseFloat(e.target.value); if (e.target.dataset.k && v >= 0) { assume[e.target.dataset.k] = v; updateBudget(); } });
-
 // ---- touch controls and phone tabs ------------------------------------------
-function closeSheets() { stage0.classList.remove('show-dock', 'show-panel'); document.querySelectorAll('#tabs [aria-pressed]').forEach(b => b.setAttribute('aria-pressed', 'false')); }
+function closeSheets() { stage0.classList.remove('show-dock'); document.querySelectorAll('#tabs [aria-pressed]').forEach(b => b.setAttribute('aria-pressed', 'false')); }
 $('tabs').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.tab === 'info') { closeSheets(); $('intro').classList.remove('gone'); return; }

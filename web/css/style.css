@@ -4,9 +4,9 @@
 
 .explorer{position:relative;height:max(34rem,calc(100dvh - 4rem));overflow:hidden;background:#d9a07a}
 #view{position:absolute;inset:0;width:100%;height:100%;display:block}
-#hud,#dock,#panel,#walk-help{z-index:2}
+#hud,#dock,#walk-help{z-index:2}
 kbd{display:inline-block;min-width:1.6em;padding:0 .4em;margin:0 .1em;text-align:center;background:var(--bg-alt);border:1px solid var(--border);border-bottom-width:2px;border-radius:5px;font:.8em ui-monospace,monospace}
-.glass,#dock,#panel,#walk-help,.cityhud,.modes{background:var(--glass);-webkit-backdrop-filter:blur(12px) saturate(1.3);backdrop-filter:blur(12px) saturate(1.3);border:1px solid var(--border)}
+.glass,#dock,#walk-help,.cityhud,.modes{background:var(--glass);-webkit-backdrop-filter:blur(12px) saturate(1.3);backdrop-filter:blur(12px) saturate(1.3);border:1px solid var(--border)}
 
 /* top bar inside the viewport */
 #hud{position:absolute;top:.75rem;left:.75rem;right:.75rem;display:flex;justify-content:space-between;align-items:center;gap:.75rem;pointer-events:none}
@@ -27,23 +27,6 @@ label output{float:right;color:var(--link);font-variant-numeric:tabular-nums;let
 input[type=range]{width:100%;accent-color:var(--accent);margin:.2rem 0 0}
 .note{color:var(--muted);font-size:.8rem;line-height:1.5;margin:.4rem 0 0}
 
-/* budget panel */
-#panel{position:absolute;right:.75rem;top:3.9rem;bottom:.75rem;width:21rem;max-width:calc(100% - 1.5rem);overflow:auto;padding:1rem;border-radius:var(--radius)}
-#panel h2{margin:0 0 .25rem;font-size:1.25rem}
-label.pop{margin:.6rem 0 .9rem}
-.tiles{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
-.tile{padding:.6rem .75rem;border-radius:.75rem;background:var(--surface);border:1px solid var(--border)}
-.tile.wide{grid-column:1/-1}
-.tile .k{color:var(--muted);font-size:.68rem;letter-spacing:.05em;text-transform:uppercase}
-.tile .v{font-size:1.35rem;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums;margin-top:.1rem}
-.tile .v small{font-size:.75rem;font-weight:500;color:var(--muted);margin-left:.25rem}
-.tile .s{color:var(--muted);font-size:.75rem;line-height:1.4;margin-top:.15rem}
-.tile.warn{border-color:var(--warn)}
-.tile.warn .v{color:var(--warn)}
-#panel details{margin-top:.75rem}
-#panel summary{cursor:pointer;color:var(--muted)}
-#assume label{font-size:.78rem;text-transform:none;letter-spacing:0}
-#assume input[type=number]{width:5.5rem;float:right;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:.4rem;padding:.1rem .35rem}
 
 /* walk hint */
 #walk-help{position:absolute;left:50%;top:4rem;transform:translateX(-50%);margin:0;padding:.4rem .9rem;border-radius:999px;font-size:.85rem;max-width:calc(100% - 1.5rem);text-align:center}
@@ -75,20 +58,12 @@ canvas#view{touch-action:none;-webkit-tap-highlight-color:transparent}
   .modes{flex:none}
   .modes .btn{min-height:2.5rem;padding:.25rem .9rem}
 
-  /* sun and budget become bottom sheets opened from the tab bar */
-  #dock,#panel{display:none;left:.5rem;right:.5rem;width:auto;max-width:none;top:auto;bottom:3.6rem;height:auto;max-height:40%;border-radius:1rem;overflow:auto;z-index:3}
-  .explorer.show-dock #dock,.explorer.show-panel #panel{display:block}
+  /* the sun controls become a bottom sheet opened from the tab bar */
+  #dock{display:none;left:.5rem;right:.5rem;width:auto;max-width:none;top:auto;bottom:3.6rem;height:auto;max-height:40%;border-radius:1rem;overflow:auto;z-index:3}
+  .explorer.show-dock #dock{display:block}
   #dock{padding:.7rem 1rem .6rem}
-  #panel{padding:.8rem}
-  #panel h2{font-size:1rem;margin:0 0 .2rem}
-  #panel .tiles{gap:.4rem}
-  #panel .tile{padding:.4rem .6rem}
-  #panel .tile .v{font-size:1.1rem}
-  #panel .tile .s{font-size:.7rem}
-  #panel .note{font-size:.72rem;margin:.4rem 0}
   input[type=range]{height:2.25rem}
   input[type=range]::-webkit-slider-thumb{width:1.5rem;height:1.5rem}
-  #assume input[type=number]{width:6rem;min-height:2rem;font-size:1rem}
 
   #tabs{display:flex;position:absolute;left:.5rem;right:.5rem;bottom:.5rem;gap:.4rem;padding:.3rem;border-radius:999px;z-index:4;background:var(--glass);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid var(--border)}
   #tabs button{flex:1;min-height:2.6rem;border:0;border-radius:999px;background:transparent;color:var(--text);font:inherit;font-weight:600;cursor:pointer}

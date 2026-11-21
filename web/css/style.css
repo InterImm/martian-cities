@@ -4,10 +4,10 @@
 
 .explorer{position:relative;height:max(34rem,calc(100dvh - var(--hh,4.75rem)));overflow:hidden;background:#d9a07a}
 #view{position:absolute;inset:0;width:100%;height:100%;display:block}
-#hud,#dock,#facilities,#walk-help{z-index:2}
+#hud,#dock,#facilities,#land,#walk-help{z-index:2}
 kbd{display:inline-block;min-width:1.6em;padding:0 .4em;margin:0 .1em;text-align:center;background:var(--bg-alt);border:1px solid var(--border);border-bottom-width:2px;border-radius:var(--radius);font:.8em var(--font-mono)}
 /* Paper-and-ink panels, as in the kit: solid surface, thin rule, small radius, no glass. */
-.glass,#dock,#facilities,#walk-help,.cityhud,.modes{background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow)}
+.glass,#dock,#facilities,#land,#walk-help,.cityhud,.modes,.claim-card{background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow)}
 
 /* top bar inside the viewport */
 #hud{position:absolute;top:.75rem;left:.75rem;right:.75rem;display:flex;justify-content:space-between;align-items:center;gap:.75rem;pointer-events:none}
@@ -123,3 +123,84 @@ canvas#view{touch-action:none;-webkit-tap-highlight-color:transparent}
 #live{margin:0 0 .5rem;padding:.3rem .8rem;font-size:.85rem}
 #live.on{background:var(--text);border-color:var(--text);color:var(--bg)}
 #live:not(.on){opacity:.75}
+
+
+/* ---------- land register (js/land.js) ---------- */
+#land{display:none;position:absolute;right:.75rem;top:3.9rem;bottom:.75rem;width:23rem;max-width:calc(100% - 1.5rem);overflow:auto;padding:1rem;border-radius:var(--radius)}
+.explorer.landing #land{display:block}
+.explorer.landing #facilities{display:none}
+#land h2{margin:0 0 .25rem;font-size:1.35rem;font-weight:500}
+#land .eyebrow{margin-bottom:.3rem}
+.land-q{width:100%;margin:.6rem 0 .2rem;padding:.45rem .6rem;font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--border-strong);border-radius:var(--radius)}
+.land-card{margin:.8rem 0;padding:.8rem .9rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg)}
+.land-card h3{margin:0;font-family:var(--font-display);font-size:1.25rem;font-weight:500}
+.land-card .holder{margin:.6rem 0 .2rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.land-card .holder b{font-family:var(--font-display);font-size:1.15rem;font-weight:500}
+.land-card blockquote{margin:.4rem 0;padding-left:.7rem;border-left:3px solid var(--accent);font-style:italic}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:.25rem .7rem;margin:.8rem 0 0;font-size:.82rem}
+.facts dt{color:var(--muted);font-family:var(--font-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;padding-top:.15rem}
+.facts dd{margin:0}
+.actions{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.6rem}
+.actions .btn{padding:.35rem .8rem;font-size:.88rem;cursor:pointer}
+.btn.subtle{border-color:transparent;color:var(--muted);text-decoration:underline;text-underline-offset:.2em}
+.land-sec{margin-top:.7rem;border-top:1px solid var(--border);padding-top:.5rem}
+.land-sec summary{cursor:pointer;font-family:var(--font-display);font-size:1.02rem;font-weight:500}
+.land-rings,.lots{list-style:none;margin:.4rem 0 0;padding:0}
+.land-rings li{margin:.35rem 0}
+.ring-row,.lot-link{display:flex;width:100%;align-items:baseline;gap:.5rem;padding:.25rem .3rem;border:0;border-radius:var(--radius);background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer}
+.ring-row:hover,.lot-link:hover{background:var(--bg-alt)}
+.rid{font-family:var(--font-mono);font-weight:600;color:var(--accent);min-width:1.2rem}
+.rname{flex:1}.rname small,.lot-link small{color:var(--muted);font-size:.74rem}
+.rcount{font-family:var(--font-mono);font-size:.78rem;color:var(--muted)}
+.bar{display:block;height:4px;margin:.1rem .3rem 0 2rem;background:var(--bg-alt);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.lock{display:block;margin:.15rem .3rem 0 2rem;color:var(--muted);font-size:.72rem}
+.lot-link{flex-wrap:wrap;column-gap:.4rem}.lot-link b{font-family:var(--font-mono);color:var(--accent)}
+.lot-link small{flex-basis:100%;padding-left:0}
+
+/* claim dialog: a side card, so the building preview in the scene stays visible */
+.claim{position:absolute;left:.75rem;top:3.9rem;bottom:.75rem;width:25rem;max-width:calc(100% - 1.5rem);z-index:6;display:flex;flex-direction:column}
+.claim[hidden]{display:none}
+.claim-card{position:relative;overflow:auto;max-height:100%;padding:1.1rem 1.2rem;border-radius:var(--radius)}
+.claim.deed-view{left:50%;transform:translateX(-50%);width:min(30rem,calc(100% - 1.5rem))}
+.claim-card h2{margin:0 0 .5rem;font-size:1.35rem;font-weight:500;padding-right:2rem}
+.claim-card .x{position:absolute;right:.6rem;top:.5rem;width:2rem;height:2rem;border:0;background:transparent;color:var(--muted);font-size:1.5rem;line-height:1;cursor:pointer}
+.steps{display:flex;gap:.8rem;list-style:none;margin:0 0 .8rem;padding:0;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.steps .on{color:var(--text);border-bottom:2px solid var(--accent)}.steps .done{color:var(--accent)}
+.claim-form label{text-transform:none;letter-spacing:0;font-family:inherit;font-size:.85rem;color:var(--text)}
+.claim-form label small,.claim-form .lab{color:var(--muted);font-size:.75rem}
+.claim-form input[type=text],.claim-form textarea{display:block;width:100%;margin-top:.25rem;padding:.45rem .6rem;font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--border-strong);border-radius:var(--radius)}
+.claim-form details{margin:.6rem 0;font-size:.88rem}.claim-form summary{cursor:pointer;color:var(--link)}
+.types{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin:0 0 .5rem;padding:0;border:0}
+.type{margin:0;padding:.5rem .6rem;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;background:var(--bg)}
+.type.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.type input{position:absolute;opacity:0;pointer-events:none}
+.type b{display:block;font-family:var(--font-display);font-weight:500;font-size:.98rem}
+.type small{display:block;color:var(--muted);font-size:.72rem;line-height:1.35;margin-top:.15rem}
+.field{margin:.5rem 0}.field .lab{display:block;margin-bottom:.25rem}
+.sws{display:flex;flex-wrap:wrap;gap:.35rem}
+.sw{margin:0;cursor:pointer}.sw input{position:absolute;opacity:0}
+.sw i{display:block;width:1.7rem;height:1.7rem;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--border-strong)}
+.sw input:checked+i{box-shadow:0 0 0 2px var(--text)}
+.seg{display:flex;flex-wrap:wrap;gap:.3rem}.seg label{margin:0}.seg input{position:absolute;opacity:0}
+.seg span{display:inline-block;padding:.25rem .65rem;border:1px solid var(--border-strong);border-radius:var(--radius);font-size:.82rem;cursor:pointer}
+.seg input:checked+span{background:var(--text);color:var(--bg);border-color:var(--text)}
+.err{color:#d64545;font-size:.85rem;margin:.4rem 0 0;min-height:1em}
+.summary{padding:.6rem .8rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg)}
+.summary p{margin:.2rem 0}
+.rules{padding-left:1.1rem}.rules li{margin:.25rem 0}
+.ts{margin:.6rem 0;min-height:65px}
+.code-box{margin:.8rem 0;padding:.8rem;border:1px dashed var(--accent);border-radius:var(--radius);background:var(--bg)}
+.code-box code{display:block;margin:.3rem 0 .5rem;font-family:var(--font-mono);font-size:1.25rem;letter-spacing:.06em;color:var(--accent);word-break:break-all}
+.deed-img{display:block;width:100%;height:auto;border:1px solid var(--border);margin:.4rem 0}
+
+@media (max-width:760px){
+  #land{display:none;left:.5rem;right:.5rem;width:auto;max-width:none;top:auto;bottom:3.6rem;max-height:52%;padding:.8rem;z-index:3}
+  .explorer.landing #land{display:none}
+  .explorer.show-land #land{display:block}
+  .claim{left:.5rem;right:.5rem;top:auto;bottom:3.6rem;width:auto;max-width:none;max-height:58%}
+  .claim.deed-view{left:.5rem;transform:none;width:auto;top:3.4rem;max-height:none}
+  .types{grid-template-columns:1fr 1fr}
+  .type small{display:none}
+}
+#land .land-for-co { margin: 0.4rem 0 0.8rem; padding: 0.6rem 0.8rem; border-left: 3px solid var(--accent); background: var(--accent-soft, rgba(184, 74, 40, 0.08)); }

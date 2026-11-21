@@ -13,7 +13,8 @@
       "facilities": { "city": "Procyon City" },
       "model": { "file": "assets/isidis-city-procyon.stl", "format": "stl", "upAxis": "z", "scale": 1, "groundLevel": 0 },
       "terrain": { "flatRadius": 2300, "blendRadius": 3400 },
-      "camera": { "orbit": [0, 1500, 3200], "target": [0, 60, 0], "walkStart": [0, 950] }
+      "camera": { "orbit": [0, 1500, 3200], "target": [0, 60, 0], "walkStart": [0, 950] },
+      "land": { "plan": "cities/isidis-procyon/plots.json", "registry": "https://interimm.org/hub/api/land.json", "desk": "https://desk.interimm.org", "turnstile": "0x4AAAAAAFNeYSMJzUA7HWaV" }
     }
   ]
 }

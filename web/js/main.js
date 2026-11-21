@@ -7,6 +7,7 @@ import { sunPosition, MARS } from './sim.js';
 import { marsState } from './marstime.js';
 import { L, fixLangLinks } from './i18n.js';
 import { loadFacilities } from './facilities.js';
+import { createLand } from './land.js';
 
 const GROUND_Y = -0.4;            // flat zone sits just below the model's ground slabs
 const TERRAIN_SIZE = 16000;
@@ -41,7 +42,7 @@ const stage0 = document.getElementById('explorer');
 if (isTouch) stage0.classList.add('touch');
 
 // ---- current city -----------------------------------------------------------
-let cities = [], cfg = null, terrainMesh = null, cityGroup = null, loadToken = 0;
+let cities = [], cfg = null, terrainMesh = null, cityGroup = null, loadToken = 0, land = null;
 
 // Terrain is procedural and illustrative: noise seeded from the city id, flattened around the city.
 function hash(ix, iz) { let h = ix * 374761393 + iz * 668265263; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; }
@@ -239,7 +240,7 @@ async function showCity(id) {
   document.title = nm + ' | InterImm'; fixLangLinks();
   if ($('city').value !== cfg.id) $('city').value = cfg.id;
   history.replaceState(null, '', '#city=' + cfg.id);
-  if (mode === 'walk') setMode('orbit');
+  if (mode !== 'orbit') setMode('orbit');
   buildTerrain();
   if (cityGroup) { scene.remove(cityGroup); cityGroup.traverse(o => { o.geometry?.dispose(); }); wallMats.length = 0; cityGroup = null; }
   try {
@@ -250,6 +251,10 @@ async function showCity(id) {
     cityGroup = group; scene.add(group);
     camera.position.set(...cfg.camera.orbit); orbit.target.set(...cfg.camera.target); camera.lookAt(orbit.target);
     loadFacilities($('facilities'), cfg.facilities);
+    // land register: street plan, lots and the buildings people designed (js/land.js)
+    land?.dispose(); land = null;
+    $('btn-land').hidden = !cfg.land; document.querySelector('#tabs [data-tab=land]').hidden = !cfg.land;
+    if (cfg.land) land = createLand({ scene, camera, orbit, canvas, cfg, wallTex, wallGlow, onOpenPanel: () => { if (matchMedia('(max-width:760px)').matches) { closeSheets(); stage0.classList.add('show-land'); } } });
     live ? applyLive() : updateSun();
     en.disabled = false; en.textContent = L('Enter the city', '进入城市');
   } catch (err) { if (token === loadToken) en.textContent = L('Could not load the city model: ', '无法加载城市模型：') + err.message; }
@@ -286,6 +291,7 @@ function updateSun() {
   const night = 1 - THREE.MathUtils.clamp((s + 0.12) / 0.22, 0, 1);
   stars.material.opacity = night;
   for (const m of wallMats) m.emissiveIntensity = night * 1.1;
+  land?.setNight(night);
   placePhobos(hour);
   $('o-hour').textContent = hour.toFixed(1) + ' h';
   $('o-ls').textContent = 'Ls ' + ls + '°';
@@ -324,15 +330,26 @@ function floorAt(x, z) {
   return y;
 }
 function setMode(m) {
+  const was = mode;
   mode = m;
-  $('btn-orbit').classList.toggle('on', m === 'orbit'); $('btn-walk').classList.toggle('on', m === 'walk');
+  $('btn-orbit').classList.toggle('on', m === 'orbit'); $('btn-walk').classList.toggle('on', m === 'walk'); $('btn-land').classList.toggle('on', m === 'land');
   stage0.classList.toggle('walking', m === 'walk');
+  stage0.classList.toggle('landing', m === 'land');
+  if (was === 'land' && m !== 'land') { land?.exit(); stage0.classList.remove('show-land'); }
+  if (m === 'land') {
+    $('walk-help').hidden = true; orbit.enabled = true; touchWalk = false;
+    if (walk.isLocked) walk.unlock();
+    camera.rotation.order = 'XYZ';
+    land?.enter();
+    return;
+  }
   $('walk-help').hidden = m !== 'walk';
   $('walk-help').innerHTML = isTouch
     ? L('Left thumb to move, drag anywhere else to look.', '左手拇指移动，其余位置拖动环顾。')
     : L('Click the scene, then <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move, <kbd>Space</kbd> to jump, <kbd>Shift</kbd> to run, <kbd>Esc</kbd> to release.', '点击场景，然后用 <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移动，<kbd>空格</kbd> 跳跃，<kbd>Shift</kbd> 奔跑，<kbd>Esc</kbd> 释放鼠标。');
   orbit.enabled = m === 'orbit';
   touchWalk = false;
+  if (m === 'orbit' && was === 'land') return;      // keep the view where land mode left it
   if (m === 'walk') {
     const [wx, wz] = cfg.camera.walkStart;
     camera.position.set(wx, 0, wz); camera.position.y = floorAt(wx, wz) + 1.7; camera.lookAt(...cfg.camera.target);
@@ -347,14 +364,15 @@ function setMode(m) {
     camera.position.set(...cfg.camera.orbit); orbit.target.set(...cfg.camera.target); camera.lookAt(orbit.target);
   }
 }
-$('btn-orbit').onclick = () => setMode('orbit'); $('btn-walk').onclick = () => setMode('walk');
+$('btn-orbit').onclick = () => setMode('orbit'); $('btn-walk').onclick = () => setMode('walk'); $('btn-land').onclick = () => setMode('land');
 canvas.addEventListener('click', () => { if (mode === 'walk' && !walk.isLocked) walk.lock(); });
 
 // ---- touch controls and phone tabs ------------------------------------------
-function closeSheets() { stage0.classList.remove('show-dock', 'show-facilities'); document.querySelectorAll('#tabs [aria-pressed]').forEach(b => b.setAttribute('aria-pressed', 'false')); }
+function closeSheets() { stage0.classList.remove('show-dock', 'show-facilities', 'show-land'); document.querySelectorAll('#tabs [aria-pressed]').forEach(b => b.setAttribute('aria-pressed', 'false')); }
 $('tabs').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.tab === 'info') { closeSheets(); $('intro').classList.remove('gone'); return; }
+  if (b.dataset.tab === 'land' && mode !== 'land') setMode('land');
   const was = stage0.classList.contains('show-' + b.dataset.tab);
   closeSheets();
   if (!was) { stage0.classList.add('show-' + b.dataset.tab); b.setAttribute('aria-pressed', 'true'); }
@@ -414,13 +432,13 @@ renderer.setAnimationLoop(now => {
     if ((keys.has('Space') || jumpQueued) && onGround) { jumpQueued = false; vel.y = 4.2; onGround = false; }
     camera.position.y += vel.y * dt;
     if (camera.position.y <= fl) { camera.position.y = fl; vel.y = 0; onGround = true; } else if (camera.position.y > fl + 0.05) onGround = false;
-  } else if (mode === 'orbit') orbit.update();
+  } else if (mode === 'orbit' || mode === 'land') { land?.update(dt); orbit.update(); }
   skyGroup.position.copy(camera.position);
   for (const d of devils) { const u = d.userData; u.a += u.w * dt * 4; const x = Math.cos(u.a) * u.r + Math.sin(now / 2500 + u.i) * 120, z = Math.sin(u.a) * u.r; d.position.set(x, heightAt(x, z) + d.geometry.parameters.height / 2, z); d.rotation.y += dt * 2.5; }
   renderer.render(scene, camera);
 });
 walk.addEventListener('unlock', () => { if (mode === 'walk') setMode('orbit'); });
-window.__mars = { camera, scene, setMode, showCity, get city() { return cityGroup; }, get cfg() { return cfg; }, heightAt };
+window.__mars = { camera, scene, setMode, showCity, get city() { return cityGroup; }, get cfg() { return cfg; }, get land() { return land; }, heightAt };
 
 // ---- boot -------------------------------------------------------------------
 (async () => {
@@ -430,7 +448,16 @@ window.__mars = { camera, scene, setMode, showCity, get city() { return cityGrou
     const sel = $('city');
     sel.innerHTML = cities.map(c => `<option value="${c.id}">${L(c.name, c.name_cn || c.name)}</option>`).join('');
     sel.hidden = cities.length < 2;
-    const want = /city=([\w-]+)/.exec(location.hash)?.[1];
+    const want = /city=([\w-]+)/.exec(location.hash)?.[1], plot = /plot=([A-Za-z]\d+)/.exec(location.hash)?.[1];
+    const hp = new URLSearchParams(location.hash.slice(1));
     await showCity(want);
+    // a shared lot link opens straight into land mode at that lot;
+    // the hub's registration desk sends new companies here to pick their lot (#…&land=company&ckey=…&ccode=…&cname=…)
+    const ckey = hp.get('ckey');
+    if (ckey && land) {
+      land.setCompany({ key: ckey, code: hp.get('ccode') || '', name: hp.get('cname') || '' });
+      // showCity has already replaced the address with #city=…, so the edit code does not linger in the bar or history
+    }
+    if ((plot || ckey) && land) { await land.ready; $('intro').classList.add('gone'); setMode('land'); if (plot) land.selectId(plot); }
   } catch (err) { $('enter').textContent = L('Could not load the city list: ', '无法加载城市列表：') + err.message; }
 })();

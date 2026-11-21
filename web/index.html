@@ -16,7 +16,7 @@
 <!-- Shared InterImm look (colours, fonts, header, footer), served by interimm.org. See
      https://github.com/InterImm/interimm.github.io/blob/hugo/kit/README.md -->
 <link rel="stylesheet" href="https://interimm.org/kit/interimm.css?v=20261004">
-<link rel="stylesheet" href="css/style.css?v=20261004">
+<link rel="stylesheet" href="css/style.css?v=20261121">
 <script type="importmap">
 { "imports": { "three": "./vendor/three.module.min.js" } }
 </script>
@@ -96,6 +96,7 @@
       <ul>
         <li data-i18n="li1"><b>Orbit</b> to look down on the whole settlement.</li>
         <li data-i18n="li2"><b>Walk</b> at street level with Mars gravity (3.71 m/s²).</li>
+        <li data-i18n="li3"><b>Land</b>: claim a free lot, design your building and get a deed. It appears in the city for everyone.</li>
       </ul>
       <p class="fine" data-i18n="fine">Terrain around the city is <b>illustrative</b>, not real elevation data yet. Facility readings are simulated for the InterImm story, which is set in the year 2219.</p>
       <button id="enter" class="btn btn-primary btn-lg" disabled>Loading city model…</button>
@@ -107,6 +108,7 @@
     <nav class="modes" aria-label="View mode">
       <button id="btn-orbit" class="btn on" data-i18n="orbit">Orbit</button>
       <button id="btn-walk" class="btn" data-i18n="walk">Walk</button>
+      <button id="btn-land" class="btn" data-i18n="land" hidden>Land</button>
       <button id="btn-info" class="btn" aria-label="About this city">?</button>
     </nav>
   </div>
@@ -129,6 +131,25 @@
     <p class="note fmeta"></p>
   </aside>
 
+  <!-- Land register (js/land.js): shown in Land mode -->
+  <aside id="land" aria-label="Land register">
+    <div class="land-head">
+      <p class="eyebrow" data-i18n="landEyebrow">Land Office · Procyon City</p>
+      <h2 data-i18n="landTitle">Claim a lot</h2>
+      <p class="note" data-i18n="landIntro">Pick a free lot, design what stands on it, and it appears in the city for everyone. Free, no account.</p>
+      <p class="land-stats note"></p>
+      <input class="land-q" type="search" data-i18n-ph="landSearch" placeholder="Lot number (A117) or holder name">
+      <div class="land-results"></div>
+    </div>
+    <section class="land-card"></section>
+    <details class="land-sec" open><summary data-i18n="landRings">Rings of the city</summary><ul class="land-rings"></ul>
+      <p class="note" data-i18n="landGrow">The inner four rings are open. Each frontier ring opens when the ring inside it is a quarter full, so the city grows outwards as people move in.</p></details>
+    <details class="land-sec"><summary data-i18n="landMine">My lots</summary><ul class="lots land-mine"></ul></details>
+    <details class="land-sec"><summary data-i18n="landLatest">Latest grants</summary><ul class="lots land-latest"></ul></details>
+    <p class="note"><a href="https://interimm.org/hub/" data-i18n="landHub">The register is public, kept with the Company Hub.</a></p>
+  </aside>
+  <div id="claim" class="claim" hidden role="dialog" aria-modal="false" aria-label="Land claim"></div>
+
   <!-- Touch controls: shown on phones -->
   <p id="orbit-hint" data-i18n="hint">Drag to look around · pinch to zoom · two fingers to move</p>
   <div id="joy" aria-hidden="true"><div id="knob"></div></div>
@@ -136,6 +157,7 @@
   <nav id="tabs" aria-label="Panels">
     <button type="button" data-tab="dock" aria-pressed="false" data-i18n="tabSun">Sun</button>
     <button type="button" data-tab="facilities" aria-pressed="false" data-i18n="tabFac">Facilities</button>
+    <button type="button" data-tab="land" aria-pressed="false" data-i18n="tabLand" hidden>Land</button>
     <button type="button" data-tab="info" data-i18n="tabAbout">About</button>
   </nav>
 </div>
@@ -185,6 +207,6 @@ if (/[?&]lang=cn\b/.test(location.search)) for (const e of document.querySelecto
 const fail = m => { const b = document.getElementById('enter'); if (b && b.disabled) b.textContent = 'Could not start: ' + m; };
 addEventListener('error', e => fail(e.message)); addEventListener('unhandledrejection', e => fail(e.reason && e.reason.message || e.reason));
 </script>
-<script type="module" src="js/main.js?v=20261003f"></script>
+<script type="module" src="js/main.js?v=20261121"></script>
 </body>
 </html>

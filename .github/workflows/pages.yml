@@ -2,7 +2,7 @@ name: Deploy web to GitHub Pages
 on:
   push:
     branches: [master, main]
-    paths: ['web/**', '.github/workflows/pages.yml']
+    paths: ['web/**', 'tools/**', '.github/workflows/pages.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -19,6 +19,8 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: node web/sim.test.mjs
+      - run: node web/land.test.mjs
+      - run: node tools/plots.mjs --check
   deploy:
     needs: test
     runs-on: ubuntu-latest
@@ -33,7 +35,8 @@ jobs:
         run: |
           v=${GITHUB_SHA::8}
           sed -i -E "s/\?v=[A-Za-z0-9]+/?v=$v/g" web/index.html
-          sed -i -E "s#from '\./(sim|marstime|i18n)\.js'#from './\1.js?v=$v'#" web/js/main.js
+          # every relative module import in web/js gets the same stamp, so a module is never loaded twice
+          sed -i -E "s#from '\./([a-z-]+)\.js'#from './\1.js?v=$v'#g" web/js/*.js
       - uses: actions/upload-pages-artifact@v3
         with: { path: web }
       - id: deployment

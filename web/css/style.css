@@ -204,3 +204,5 @@ canvas#view{touch-action:none;-webkit-tap-highlight-color:transparent}
   .type small{display:none}
 }
 #land .land-for-co { margin: 0.4rem 0 0.8rem; padding: 0.6rem 0.8rem; border-left: 3px solid var(--accent); background: var(--accent-soft, rgba(184, 74, 40, 0.08)); }
+#claim .key-preview { display: block; width: 100%; max-width: 360px; margin: 0.8rem auto; border: 1px solid var(--border, #cfc6b6); }
+#claim .key-note:empty { display: none; }

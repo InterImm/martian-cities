@@ -8,7 +8,7 @@ import { marsState } from './marstime.js';
 import { L, fixLangLinks } from './i18n.js';
 import { loadFacilities } from './facilities.js';
 import { createLand } from './land.js';
-import { parseKey } from './keys.js';
+import { parseKeys } from './keys.js';
 
 const GROUND_Y = -0.4;            // flat zone sits just below the model's ground slabs
 const TERRAIN_SIZE = 16000;
@@ -454,13 +454,13 @@ window.__mars = { camera, scene, setMode, showCity, get city() { return cityGrou
     await showCity(want);
     // a shared lot link opens straight into land mode at that lot;
     // the hub's registration desk sends new companies here to pick their lot (#…&land=company&ckey=…&ccode=…&cname=…)
-    // a transfer link from a key card (#…&key=A17.CODE) moves a lot to this device
-    const key = parseKey(hp.get('key'));
+    // a transfer link from a key card (#…&key=A17.CODE~B3.CODE) moves the lots to this device
+    const keys = parseKeys(hp.get('key')), key = keys.length > 0;
     const ckey = hp.get('ckey');
     if (ckey && land) {
       land.setCompany({ key: ckey, code: hp.get('ccode') || '', name: hp.get('cname') || '' });
       // showCity has already replaced the address with #city=…, so the edit code does not linger in the bar or history
     }
-    if ((plot || ckey || key) && land) { await land.ready; $('intro').classList.add('gone'); setMode('land'); if (plot) land.selectId(plot); if (key) land.importKey(key); }
+    if ((plot || ckey || key) && land) { await land.ready; $('intro').classList.add('gone'); setMode('land'); if (plot) land.selectId(plot); if (key) land.importKeys(keys); }
   } catch (err) { $('enter').textContent = L('Could not load the city list: ', '无法加载城市列表：') + err.message; }
 })();

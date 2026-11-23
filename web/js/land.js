@@ -8,13 +8,15 @@
 // The register itself is public data in the hub (InterImm/hub, _data/land/<lot>.json, served
 // as https://interimm.org/hub/api/land.json). The only thing that writes to it is the hub's
 // front desk Worker (desk.interimm.org), behind Cloudflare Turnstile. Ownership is an edit code
-// shown once; the register keeps only its hash.
+// shown once; the register keeps only its hash. Holders can also download a key card, move the
+// lot to another device with its transfer QR, or add passkeys (keys.js).
 
 import * as THREE from 'three';
 import { L, lang } from './i18n.js';
 import { readPlan, lotCorners, lotFrame, lotAddress, lotLatLon, fmtLatLon, ringStatus, storyDate, cleanBuilding, hashSeed } from './land-plan.js';
 import { makeMaterials, buildLayer, signMesh } from './buildings.js';
 import { drawDeed, lotUrl } from './deed.js';
+import { drawKeyCard, keyText, download, passkeySupported, createPasskey, getPasskey } from './keys.js';
 
 const MINE_KEY = 'interimm-land-v1';
 const PENDING_MS = 15 * 60 * 1000;        // show our own fresh claim until the public register catches up
@@ -280,7 +282,11 @@ export function createLand(ctx) {
     if (forCompany && !co) { co = document.createElement('p'); co.className = 'land-for-co note'; panel.querySelector('.land-stats').after(co); }
     if (co) { co.hidden = !forCompany; if (forCompany) co.innerHTML = esc(L(`Choosing a lot for ${forCompany.name || forCompany.key}. Pick any free lot and claim it: the company's key and code are already filled in.`, `正在为「${forCompany.name || forCompany.key}」选地。点任意空地登记即可，公司的登记号和编辑码已经填好。`)); }
     panel.querySelector('.land-rings').innerHTML = ringsHtml();
-    panel.querySelector('.land-mine').innerHTML = myIds.length ? lotsList(myIds) : `<li class="note">${esc(L('Lots you claim on this device show up here.', '你在这台设备上登记的地块会显示在这里。'))}</li>`;
+    panel.querySelector('.land-mine').innerHTML = (myIds.length ? lotsList(myIds) : `<li class="note">${esc(L('Lots you claim on this device show up here.', '你在这台设备上登记的地块会显示在这里。'))}</li>`) +
+      `<li class="mine-acts">${myIds.length ? `<button type="button" class="btn" data-manage>${esc(myIds.length > 1 ? L(`Manage my ${myIds.length} lots`, `管理我的 ${myIds.length} 块地`) : L('Manage my lot', '管理我的地'))}</button>` : ''}` +
+      (passkeySupported() ? `<button type="button" class="btn subtle" data-pk-signin>${esc(L('Sign in with a passkey', '用通行密钥登录'))}</button>` : '') + '</li>';
+    panel.querySelector('[data-pk-signin]')?.addEventListener('click', () => openPasskeySignIn(null));
+    panel.querySelector('[data-manage]')?.addEventListener('click', openManage);
     panel.querySelector('.land-latest').innerHTML = latest.length ? lotsList(latest) : `<li class="note">${esc(L('No grants yet. The first settler gets the pick of Pioneer Ring.', '还没有人登记。第一位定居者可以在开拓者环任意挑选。'))}</li>`;
     renderCard();
   }
@@ -300,7 +306,7 @@ export function createLand(ctx) {
         (r.motto ? `<blockquote>${esc(r.motto)}</blockquote>` : '') +
         `<p class="note">${esc(typeName(b.type))}${b.type === 'garden' ? '' : esc(L(` · ${b.floors} floors`, ` · ${b.floors} 层`))}${b.sign ? ` · “${esc(b.sign)}”` : ''} · ${esc(L('granted', '登记于'))} ${esc(r.granted || '')}${r.company?.key ? ` · <a href="https://interimm.org/hub/companies/${encodeURIComponent(r.company.key)}/" target="_blank" rel="noopener">${esc(r.company.name || L('company page', '公司主页'))}</a>` : ''}</p>` +
         `<div class="actions"><button class="btn" data-act="deed">${esc(L('Deed poster', '地契海报'))}</button><button class="btn" data-act="share">${esc(L('Copy link', '复制链接'))}</button><button class="btn" data-act="look">${esc(L('Look closer', '走近看看'))}</button></div>` +
-        `<div class="actions">${mine[l.id] ? `<button class="btn" data-act="edit">${esc(L('Change my building', '修改我的建筑'))}</button><button class="btn subtle" data-act="release">${esc(L('Give up this lot', '放弃这块地'))}</button>` : `<button class="btn subtle" data-act="mycode">${esc(L('I hold this lot', '这块地是我的'))}</button>`}</div>`;
+        `<div class="actions">${mine[l.id] ? `<button class="btn" data-act="keys">${esc(L('Keys', '钥匙'))}</button><button class="btn" data-act="edit">${esc(L('Change my building', '修改我的建筑'))}</button><button class="btn subtle" data-act="release">${esc(L('Give up this lot', '放弃这块地'))}</button>` : `<button class="btn subtle" data-act="mycode">${esc(L('I hold this lot', '这块地是我的'))}</button>`}</div>`;
     } else if (s.open) {
       body = `<p class="holder"><span class="chip">${esc(L('Free', '空地'))}</span></p><div class="actions"><button class="btn btn-primary" data-act="claim">${esc(L('Claim this lot', '登记这块地'))}</button><button class="btn" data-act="look">${esc(L('Look closer', '走近看看'))}</button></div>` +
         `<p class="note">${esc(L('Free, takes a minute, no account. You design the building; it appears in the city for everyone.', '免费，一分钟，无需账号。你来设计建筑，它会出现在所有人看到的城市里。'))}</p>`;
@@ -321,6 +327,7 @@ export function createLand(ctx) {
     else if (act === 'edit') openClaim(selected.id, { edit: true });
     else if (act === 'release') openRelease(selected.id);
     else if (act === 'mycode') openCode(selected.id);
+    else if (act === 'keys') openKeys(selected.id);
   });
   panel.querySelector('.land-q').addEventListener('input', e => search(e.target.value));
   panel.querySelector('[data-act=overview]')?.addEventListener('click', overview);
@@ -393,10 +400,201 @@ export function createLand(ctx) {
     catch { throw new Error(L('Could not reach the Land Office. Check your connection and try again.', '无法连接土地登记处，请检查网络后再试。')); }
     const out = await res.json().catch(() => ({}));
     if (!res.ok || !out.ok) {
-      const msg = { taken: L('Someone claimed this lot a moment ago. Pick another one.', '这块地刚刚被别人登记了，请换一块。'), locked: L('This ring is not open yet.', '这条环路尚未开放。'), code: L('That edit code does not match this lot.', '编辑码与这块地不符。'), words: L('Some words are not allowed on the register. Please change them.', '有些用词不能登记，请修改。'), rate: L('Too many claims from your network today. Try again tomorrow.', '你的网络今天登记次数过多，请明天再试。'), turnstile: L('The check did not pass. Please try again.', '人机验证未通过，请再试一次。') }[out.error];
+      const msg = { taken: L('Someone claimed this lot a moment ago. Pick another one.', '这块地刚刚被别人登记了，请换一块。'), locked: L('This ring is not open yet.', '这条环路尚未开放。'), code: L('That edit code does not match this lot.', '编辑码与这块地不符。'), words: L('Some words are not allowed on the register. Please change them.', '有些用词不能登记，请修改。'), rate: L('Too many claims from your network today. Try again tomorrow.', '你的网络今天登记次数过多，请明天再试。'), turnstile: L('The check did not pass. Please try again.', '人机验证未通过，请再试一次。'), passkey: L('The passkey sign-in could not be checked. Please try again.', '通行密钥验证失败，请再试一次。'), passkey_unknown: L('That passkey is not on this lot.', '这个通行密钥不属于这块地。'), caps: L('This lot already has five passkeys.', '这块地已有五个通行密钥。') }[out.error];
       throw new Error(msg || out.message || L('The Land Office could not finish this. Please try again later.', '土地登记处暂时无法完成，请稍后再试。'));
     }
     return out;
+  }
+
+  // How this device proves it holds a lot: the edit code it remembers, or a passkey.
+  async function credFor(id) {
+    const m = mine[id] || {};
+    if (m.code) return { code: m.code };
+    if (m.passkey && passkeySupported()) {
+      const { challenge, rpId } = await desk('/land/challenge', { city: plan.city });
+      const { assertion } = await getPasskey({ challenge, rpId, ids: [m.passkey] });
+      return { passkey: assertion };
+    }
+    return { code: '' };
+  }
+  function remember(id, patch) { mine[id] = { ...(mine[id] || {}), ...patch }; delete mine[id].released; saveMine(mine); }
+
+  // ---------------------------------------------------------------- keys: card, transfer, passkeys
+  const myHeld = () => Object.keys(mine).filter(id => record(id) && plan.byId.get(id)).sort();
+  const keysFor = ids => ids.filter(id => mine[id]?.code).map(id => ({ lot: plan.byId.get(id), code: mine[id].code, holder: record(id)?.holder }));
+  // The passkey this device uses for most of its lots: new lots join it rather than getting their own.
+  function keyring() {
+    const n = {};
+    for (const id of myHeld()) { const p = mine[id].passkey; if (p) n[p] = (n[p] || 0) + 1; }
+    return Object.entries(n).sort((x, y) => y[1] - x[1])[0]?.[0] || null;
+  }
+  async function saveKeyCard(ids, btn) {
+    const keys = keysFor(ids); if (!keys.length) return;
+    const c = await drawKeyCard({ plan, keys, lang });
+    c.toBlob(b => download(`interimm-key-${keys.length > 1 ? `${keys.length}-lots` : keys[0].lot.id}.png`, b), 'image/png');
+    if (btn) btn.textContent = L('Downloaded', '已下载');
+  }
+  function saveKeyText(ids, btn) {
+    const keys = keysFor(ids); if (!keys.length) return;
+    download(`interimm-key-${keys.length > 1 ? `${keys.length}-lots` : keys[0].lot.id}.txt`, new Blob([keyText({ plan, keys, lang })], { type: 'text/plain;charset=utf-8' }));
+    if (btn) btn.textContent = L('Downloaded', '已下载');
+  }
+  // Put these lots on one passkey: the device's existing one if it has one (a sign-in links it),
+  // else a new one. Lots prove themselves with their codes, or with the passkey they already hold.
+  async function passkeyFor(ids, box, btn, note, { fresh = false } = {}) {
+    btn.disabled = true; note.textContent = '';
+    try {
+      const ring = fresh ? null : keyring();
+      const todo = ids.filter(id => !(ring && mine[id]?.passkey === ring));
+      if (!todo.length) { note.textContent = L('These lots are already on your passkey.', '这些地已经在你的通行密钥里了。'); return; }
+      const withCode = todo.filter(id => mine[id]?.code);
+      const viaKey = todo.filter(id => !mine[id]?.code && mine[id]?.passkey);
+      const oldKey = viaKey.length ? mine[viaKey[0]].passkey : null;
+      const ok = [...withCode, ...viaKey.filter(id => mine[id].passkey === oldKey)];
+      if (!ok.length) throw new Error(L('This device has no code or passkey for these lots.', '这台设备上没有这些地的编辑码或通行密钥。'));
+      const body = { city: plan.city, lots: ok.map(id => ({ lot: id, ...(mine[id]?.code ? { code: mine[id].code } : {}) })) };
+      if (oldKey && !(ring && oldKey === ring)) {
+        const c0 = await desk('/land/challenge', { city: plan.city });
+        body.passkey = (await getPasskey({ challenge: c0.challenge, rpId: c0.rpId, ids: [oldKey] })).assertion;
+      }
+      const { challenge, rpId } = await desk('/land/challenge', { city: plan.city });
+      let pid;
+      if (ring) {
+        const got = await getPasskey({ challenge, rpId, ids: [ring] });
+        body.linkPasskey = got.assertion; pid = got.assertion.id;
+      } else {
+        const l = plan.byId.get(ok[0]);
+        const label = ok.length > 1 || myHeld().length > 1 ? L(`Procyon City · my lots`, '南河城 · 我的地') : `${ok[0]} · ${lotAddress(plan, l, lang).line}`;
+        const np = await createPasskey({ challenge, rpId, city: plan.city, lot: ok[0], label, holder: record(ok[0])?.holder });
+        body.newPasskey = np; pid = np.id;
+      }
+      body.turnstile = await token(box);
+      const out = await desk('/land/passkey/add', body);
+      for (const id of ok) remember(id, { passkey: pid, passkeys: out.lots?.[id] || out.passkeys });
+      box.innerHTML = '';
+      btn.textContent = ring ? L('Added to your passkey', '已加入你的通行密钥') : L('Passkey saved', '通行密钥已保存');
+      const left = todo.length - ok.length;
+      note.textContent = L(`${ok.length} lot${ok.length > 1 ? 's' : ''} on one passkey. Sign in with it on any device where your passkeys sync (the same Apple, Google or password-manager account) and every lot comes back.`, `${ok.length} 块地在同一个通行密钥里。在同步了通行密钥的设备上（同一个 Apple、Google 或密码管理器账号）登录，所有地块都会回来。`) +
+        (left ? L(` ${left} lot(s) were left out: add them again from this screen.`, ` 有 ${left} 块没加上，请再点一次。`) : '');
+      renderPanel();
+    } catch (ex) {
+      btn.disabled = false;
+      note.textContent = ex?.name === 'NotAllowedError' ? L('Cancelled.', '已取消。') : ex?.message === 'unsupported' ? L('This browser cannot save a passkey for the Land Office.', '这个浏览器无法为土地登记处保存通行密钥。') : (ex?.message || String(ex));
+    }
+  }
+  function passkeyLabel(ids) {
+    const ring = keyring();
+    if (ring && ids.every(id => mine[id]?.passkey === ring)) return L('Add another passkey', '再添加一个通行密钥');
+    return ring ? L('Add to my passkey', '加入我的通行密钥') : L('Save as passkey', '存为通行密钥');
+  }
+  function keyButtons(ids) {
+    const codes = ids.some(id => mine[id]?.code), many = ids.length > 1;
+    return `${codes ? `<button class="btn" data-keycard>${esc(many ? L('One key card for all', '下载全部钥匙卡') : L('Download key card', '下载钥匙卡'))}</button><button class="btn" data-keytext>${esc(L('Download as text', '下载文本'))}</button>` : ''}` +
+      `${passkeySupported() && ids.some(id => mine[id]?.code || mine[id]?.passkey) ? `<button class="btn" data-passkey>${esc(passkeyLabel(ids))}</button>` : ''}`;
+  }
+  function wireKeys(ids, root) {
+    root.querySelector('[data-keycard]')?.addEventListener('click', e => saveKeyCard(ids, e.target));
+    root.querySelector('[data-keytext]')?.addEventListener('click', e => saveKeyText(ids, e.target));
+    root.querySelector('[data-passkey]')?.addEventListener('click', e => {
+      const ring = keyring(), fresh = !!ring && ids.every(id => mine[id]?.passkey === ring);
+      passkeyFor(ids, root.querySelector('.ts'), e.target, root.querySelector('.key-note'), { fresh });
+    });
+  }
+  async function openKeys(id) {
+    const l = plan.byId.get(id), a = lotAddress(plan, l, lang), code = mine[id]?.code;
+    dlg.hidden = false; dlg.className = 'claim';
+    dlg.innerHTML = `<div class="claim-card"><button class="x" data-x aria-label="${esc(L('Close', '关闭'))}">×</button>
+      <p class="eyebrow">${esc(L('Keys', '钥匙'))} · ${id}</p><h2>${esc(a.line)}</h2>
+      ${code ? `<div class="code-box"><span class="lab">${esc(L('Edit code', '编辑码'))}</span><code>${esc(code)}</code>
+        <p class="note">${esc(L('To move this lot to another device, scan the QR code on the key card there, or open the link in the text file.', '要转移到另一台设备，在那台设备上扫钥匙卡上的二维码，或打开文本文件里的链接。'))}</p></div>
+        <img class="key-preview" alt="${esc(L('Key card', '钥匙卡'))}">`
+      : `<p class="note">${esc(L('This device signs in to the lot with a passkey. On another device, sign in with the same passkey (it syncs with your Apple, Google or password-manager account).', '这台设备用通行密钥登录这块地。在另一台设备上用同一个通行密钥登录即可（它会随 Apple、Google 或密码管理器账号同步）。'))}</p>`}
+      <div class="actions">${keyButtons([id])}</div><div class="ts"></div><p class="note key-note" role="status"></p>
+      ${myHeld().length > 1 ? `<p class="note"><button type="button" class="linkish" data-manage>${esc(L(`You hold ${myHeld().length} lots: manage them together`, `你持有 ${myHeld().length} 块地：一起管理`))}</button></p>` : ''}
+      <p class="note">${esc(L('Keep keys private: whoever has the code or the card can change or give up the lot.', '请妥善保管：拿到编辑码或钥匙卡的人可以修改或放弃这块地。'))}</p></div>`;
+    wireKeys([id], dlg);
+    dlg.querySelector('[data-manage]')?.addEventListener('click', openManage);
+    if (code) { const c = await drawKeyCard({ plan, keys: keysFor([id]), lang }); const img = dlg.querySelector('.key-preview'); if (img) img.src = c.toDataURL('image/png'); }
+  }
+
+  // ---------------------------------------------------------------- my lots, together
+  function openManage() {
+    const ids = myHeld();
+    if (!ids.length) return;
+    const ring = keyring();
+    const rows = ids.map(id => {
+      const l = plan.byId.get(id), r = record(id), a = lotAddress(plan, l, lang), m = mine[id];
+      const how = [m.code ? L('code', '编辑码') : '', m.passkey ? (m.passkey === ring ? L('passkey', '通行密钥') : L('other passkey', '另一个通行密钥')) : ''].filter(Boolean).join(' · ');
+      return `<tr data-lot="${id}"><td><b>${id}</b><br><small>${esc(a.line)}</small></td><td>${esc(r?.holder || '')}<br><small>${esc(typeName(cleanBuilding(plan, l.zone, r?.building).type))}${r?.pending ? ' · ' + esc(L('publishing…', '发布中…')) : ''}</small></td>
+        <td><small>${esc(how || L('none on this device', '本机无钥匙'))}</small></td>
+        <td class="row-acts"><button class="btn subtle" data-go="look">${esc(L('Go', '前往'))}</button><button class="btn subtle" data-go="edit">${esc(L('Edit', '改建'))}</button><button class="btn subtle" data-go="keys">${esc(L('Keys', '钥匙'))}</button></td></tr>`;
+    }).join('');
+    const onRing = ring ? ids.filter(id => mine[id].passkey === ring).length : 0;
+    dlg.hidden = false; dlg.className = 'claim wide';
+    dlg.innerHTML = `<div class="claim-card"><button class="x" data-x aria-label="${esc(L('Close', '关闭'))}">×</button>
+      <p class="eyebrow">${esc(L('Land Office · my lots', '土地登记处 · 我的地'))}</p><h2>${esc(L(`You hold ${ids.length} lot${ids.length > 1 ? 's' : ''}`, `你持有 ${ids.length} 块地`))}</h2>
+      <table class="my-lots"><tbody>${rows}</tbody></table>
+      <h3>${esc(L('One key for all of them', '一把钥匙管所有地'))}</h3>
+      <p class="note">${esc(ring
+        ? L(`${onRing} of ${ids.length} lots are on your passkey. Signing in with it on a new device brings back every lot on it.`, `${ids.length} 块地中有 ${onRing} 块在你的通行密钥里。在新设备上用它登录，里面的地块都会回来。`)
+        : L('Save every lot to one passkey, or download one key card with a QR code that moves them all to another device.', '把所有地存进一个通行密钥，或者下载一张钥匙卡，扫码即可把它们全部转移到另一台设备。'))}</p>
+      <div class="actions">${keyButtons(ids)}${passkeySupported() ? `<button class="btn subtle" data-pk-signin>${esc(L('Sign in with a passkey', '用通行密钥登录'))}</button>` : ''}</div>
+      <div class="ts"></div><p class="note key-note" role="status"></p>
+      <p class="note">${esc(L('Keep keys private: whoever has a code or the card can change or give up those lots.', '请妥善保管：拿到编辑码或钥匙卡的人可以修改或放弃这些地。'))}</p></div>`;
+    wireKeys(ids, dlg);
+    dlg.querySelector('[data-pk-signin]')?.addEventListener('click', () => openPasskeySignIn(null));
+    dlg.querySelector('tbody').addEventListener('click', e => {
+      const b = e.target.closest('[data-go]'); if (!b) return;
+      const id = b.closest('tr').dataset.lot, l = plan.byId.get(id);
+      if (b.dataset.go === 'keys') return openKeys(id);
+      closeDialog(); select(l, true);
+      if (b.dataset.go === 'edit') openClaim(id, { edit: true });
+    });
+  }
+
+  function openPasskeySignIn(id) {
+    dlg.hidden = false; dlg.className = 'claim';
+    dlg.innerHTML = `<div class="claim-card"><button class="x" data-x aria-label="${esc(L('Close', '关闭'))}">×</button><p class="eyebrow">${esc(L('Land Office', '土地登记处'))}${id ? ' · ' + id : ''}</p>
+      <h2>${esc(L('Sign in with a passkey', '用通行密钥登录'))}</h2><p class="note">${esc(L('Your device shows the passkeys it holds for the Land Office. Every lot on the passkey you pick comes back to this device.', '设备会列出你为土地登记处保存的通行密钥。选一个，它里面的所有地块都会回到这台设备。'))}</p>
+      <div class="ts"></div><p class="err" role="alert"></p><div class="actions"><button class="btn btn-primary" data-go>${esc(L('Use passkey', '使用通行密钥'))}</button></div></div>`;
+    const err = dlg.querySelector('.err');
+    let tp = token(dlg.querySelector('.ts')); tp.catch(() => {});
+    dlg.querySelector('[data-go]').addEventListener('click', async e => {
+      e.target.disabled = true; err.textContent = '';
+      try {
+        const { challenge, rpId } = await desk('/land/challenge', { city: plan.city });
+        const got = await getPasskey({ challenge, rpId, ids: id && mine[id]?.passkey ? [mine[id].passkey] : undefined });
+        if (got.city && got.city !== plan.city) throw new Error(L('That passkey belongs to another city.', '这个通行密钥属于另一座城市。'));
+        const out = await desk('/land/passkey/signin', { city: plan.city, lot: got.lot || id || '', passkey: got.assertion, turnstile: await tp });
+        const ids = Object.keys(out.lots || {});
+        for (const lid of ids) remember(lid, { passkey: got.assertion.id, record: out.lots[lid].record, passkeys: out.lots[lid].passkeys, at: 0 });
+        dlg.hidden = true; renderPanel(); recolor();
+        if (ids.length === 1 || (id && ids.includes(id))) api.selectId(id && ids.includes(id) ? id : ids[0]);
+        else if (ids.length > 1) openManage();
+      } catch (ex) {
+        e.target.disabled = false; err.textContent = ex?.name === 'NotAllowedError' ? L('Cancelled.', '已取消。') : (ex?.message || String(ex));
+        tp = token(dlg.querySelector('.ts')); tp.catch(() => {});
+      }
+    });
+  }
+
+  // A key card for several lots: one human check, then every lot with a matching code comes here.
+  function openImport(keys) {
+    dlg.hidden = false; dlg.className = 'claim';
+    dlg.innerHTML = `<div class="claim-card"><button class="x" data-x aria-label="${esc(L('Close', '关闭'))}">×</button><p class="eyebrow">${esc(L('Land Office · key card', '土地登记处 · 钥匙卡'))}</p>
+      <h2>${esc(L(`Move ${keys.length} lots to this device`, `把 ${keys.length} 块地转移到这台设备`))}</h2>
+      <ul class="lots">${keys.map(k => `<li><b>${k.lot}</b> ${esc(lotAddress(plan, plan.byId.get(k.lot), lang).line)}</li>`).join('')}</ul>
+      <div class="ts"></div><p class="err" role="alert"></p></div>`;
+    const err = dlg.querySelector('.err');
+    (async () => {
+      try {
+        const out = await desk('/land/verify', { city: plan.city, lots: keys.map(k => ({ lot: k.lot, code: k.code })), turnstile: await token(dlg.querySelector('.ts')) });
+        for (const k of keys) if (out.lots[k.lot]) remember(k.lot, { code: k.code, record: out.lots[k.lot].record, passkeys: out.lots[k.lot].passkeys, at: 0 });
+        renderPanel(); recolor();
+        if (out.failed?.length) { err.textContent = L(`These codes no longer match: ${out.failed.join(', ')}. The other lots are on this device now.`, `这些编辑码已失效：${out.failed.join('、')}。其余地块已转移到这台设备。`); return; }
+        openManage();
+      } catch (ex) { err.textContent = ex?.message || String(ex); }
+    })();
   }
 
   // ---------------------------------------------------------------- claim / edit dialog
@@ -462,9 +660,9 @@ export function createLand(ctx) {
           const tok = await tokenPromise;
           const body = { city: plan.city, lot: id, holder: who.holder.trim(), motto: who.motto.trim(), building: b, turnstile: tok };
           let out;
-          if (edit) out = await desk('/land/update', { ...body, code });
+          if (edit) out = await desk('/land/update', { ...body, ...(await credFor(id)) });
           else out = await desk('/land/claim', { ...body, contact: who.contact.trim() || undefined, company: who.ckey.trim() ? { key: who.ckey.trim(), code: who.ccode.trim() } : undefined });
-          mine[id] = { code: out.code || code, record: out.record, at: Date.now() }; saveMine(mine);
+          remember(id, { code: out.code || code || mine[id]?.code, record: out.record, at: Date.now() });
           reg.lots[id] = { ...out.record };
           await afterChange(id);
           showDone(id, out.code, edit);
@@ -486,25 +684,31 @@ export function createLand(ctx) {
       <p>${esc(edit ? L('Your building is updated. Others see it within a minute or two.', '建筑已更新，其他人一两分钟内就能看到。') : L(`${a.line} is yours. Everyone sees your building in the city within a minute or two.`, `${a.line} 归你了。一两分钟内所有人都能在城市里看到你的建筑。`))}</p>
       ${code ? `<div class="code-box"><span class="lab">${esc(L('Your edit code: keep it safe', '你的编辑码：请妥善保存'))}</span><code>${esc(code)}</code><button class="btn" data-copy>${esc(L('Copy', '复制'))}</button>
       <p class="note">${esc(L('This browser remembers it too, but it is the only way to change or give up the lot from anywhere else. It is on your deed poster as well.', '这个浏览器也会记住它，但在其他地方修改或放弃地块只能靠它。'))}</p></div>` : ''}
+      ${code ? `<div class="actions">${keyButtons([id])}</div><div class="ts"></div><p class="note key-note" role="status"></p>` : ''}
       <div class="actions"><button class="btn btn-primary" data-deed>${esc(L('Get the deed poster', '获取地契海报'))}</button><button class="btn" data-share>${esc(L('Copy link to share', '复制分享链接'))}</button></div></div>`;
+    wireKeys([id], dlg);
     dlg.querySelector('[data-copy]')?.addEventListener('click', async e => { try { await navigator.clipboard.writeText(code); e.target.textContent = L('Copied', '已复制'); } catch {} });
     dlg.querySelector('[data-deed]').addEventListener('click', e => saveDeed(id, e.target));
     dlg.querySelector('[data-share]').addEventListener('click', e => copyLink(id, e.target));
   }
-  function openCode(id) {
+  function openCode(id, prefill = '') {
     dlg.hidden = false; dlg.className = 'claim';
     dlg.innerHTML = `<div class="claim-card"><button class="x" data-x aria-label="${esc(L('Close', '关闭'))}">×</button><p class="eyebrow">${id}</p><h2>${esc(L('Enter your edit code', '输入编辑码'))}</h2>
-      <form class="claim-form"><label>${esc(L('Edit code', '编辑码'))}<input type="text" name="code" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off"></label><div class="ts"></div><p class="err" role="alert"></p>
-      <div class="actions"><button class="btn btn-primary" type="submit">${esc(L('Check', '核对'))}</button></div></form></div>`;
+      <form class="claim-form"><label>${esc(L('Edit code', '编辑码'))}<input type="text" name="code" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" value="${esc(prefill)}"></label><div class="ts"></div><p class="err" role="alert"></p>
+      <div class="actions"><button class="btn btn-primary" type="submit">${esc(L('Check', '核对'))}</button>${passkeySupported() ? `<button class="btn" type="button" data-pk>${esc(L('Use a passkey instead', '改用通行密钥'))}</button>` : ''}</div></form></div>`;
+    dlg.querySelector('[data-pk]')?.addEventListener('click', () => openPasskeySignIn(id));
     const form = dlg.querySelector('form');
     let tp = token(dlg.querySelector('.ts')); tp.catch(() => {});
+    // arriving from a transfer link: check the code as soon as the human check is done
+    if (prefill) tp.then(() => form.requestSubmit()).catch(() => {});
     form.addEventListener('submit', async e => {
       e.preventDefault();
       const code = String(new FormData(form).get('code') || '').trim();
       try {
         const out = await desk('/land/verify', { city: plan.city, lot: id, code, turnstile: await tp });
-        mine[id] = { code, record: out.record, at: 0 }; saveMine(mine);
+        remember(id, { code, record: out.record, passkeys: out.passkeys, at: 0 });
         dlg.hidden = true; renderPanel(); recolor();
+        if (prefill) api.selectId(id);
       } catch (ex) { form.querySelector('.err').textContent = ex.message; tp = token(dlg.querySelector('.ts')); tp.catch(() => {}); }
     });
   }
@@ -520,7 +724,7 @@ export function createLand(ctx) {
       e.preventDefault();
       if (String(new FormData(form).get('confirm')).trim().toUpperCase() !== id) { form.querySelector('.err').textContent = L('That is not the lot number.', '地块号不对。'); return; }
       try {
-        await desk('/land/release', { city: plan.city, lot: id, code: mine[id]?.code, turnstile: await tp });
+        await desk('/land/release', { city: plan.city, lot: id, ...(await credFor(id)), turnstile: await tp });
         delete reg.lots[id]; mine[id] = { released: Date.now() }; saveMine(mine);
         dlg.hidden = true; await afterChange(id);
       } catch (ex) { form.querySelector('.err').textContent = ex.message; tp = token(dlg.querySelector('.ts')); tp.catch(() => {}); }
@@ -552,6 +756,10 @@ export function createLand(ctx) {
       if (t >= 1) tween = null;
     },
     setNight(n) { mats.wall.emissiveIntensity = n * 1.1; mats.glass.emissiveIntensity = n * 0.9; mats.plant.emissiveIntensity = n * 0.5; },
+    // a transfer link (#…&key=A17.CODE): open that lot and check the code
+    importKey(k) { const l = plan?.byId.get(k.lot); if (!l) return; select(l, true); openCode(l.id, k.code); },
+    importKeys(ks) { ks = (ks || []).filter(k => plan?.byId.get(k.lot)); if (ks.length === 1) api.importKey(ks[0]); else if (ks.length) openImport(ks); },
+    manage: () => openManage(),
     setCompany(c) { forCompany = c && c.key ? { key: String(c.key), code: String(c.code || ''), name: String(c.name || '') } : null; if (plan) renderPanel(); },
     selectId(id) { const l = plan?.byId.get(String(id).toUpperCase()); if (l) select(l, true); },
     dispose() {
